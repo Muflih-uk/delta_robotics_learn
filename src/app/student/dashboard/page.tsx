@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function StudentDashboardPage() {
   return (
     <main className="flex-1 p-4 md:p-10 bg-background min-h-screen max-w-[1440px] mx-auto w-full">
@@ -81,9 +83,9 @@ export default function StudentDashboardPage() {
       <div className="mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-headline-lg text-headline-lg text-on-surface">My Courses</h2>
-          <a className="font-label-sm text-label-sm text-primary-container hover:underline flex items-center gap-1" href="#">
+          <Link className="font-label-sm text-label-sm text-primary-container hover:underline flex items-center gap-1" href="/student/courses">
             View All <span className="material-symbols-outlined text-sm">arrow_forward</span>
-          </a>
+          </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Course Card 1 */}

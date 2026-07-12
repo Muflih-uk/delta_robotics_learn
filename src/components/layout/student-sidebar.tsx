@@ -2,31 +2,40 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 const studentNavItems = [
-  { title: "Overview", url: "/student/dashboard", icon: "dashboard" },
-  { title: "Curriculum", url: "/student/courses", icon: "menu_book" },
-  { title: "Hardware Kit", url: "/student/hardware", icon: "precision_manufacturing" },
-  { title: "Simulations", url: "/student/simulations", icon: "model_training" },
-  { title: "Resources", url: "/student/resources", icon: "folder_open" },
+  { title: "Dashboard", url: "/student/dashboard", icon: "dashboard" },
+  { title: "Courses", url: "/student/courses", icon: "menu_book" },
+  { title: "Workshops", url: "/student/workshops", icon: "precision_manufacturing" },
+  { title: "My Experience", url: "/student/experience", icon: "edit_note" },
 ];
 
 export function StudentSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
 
   return (
-    <aside className="hidden md:flex w-64 h-screen fixed left-0 top-0 flex-col justify-between py-6 z-40 bg-surface-container-low dark:bg-surface-container">
+    <aside className="hidden md:flex w-[260px] h-screen sticky top-0 left-0 border-r border-border bg-bg-alt flex-col justify-between py-6 shrink-0 z-50">
       <div>
-        <div className="px-6 mb-12">
-          <div className="flex items-center gap-3 mb-2">
-            <img src="/logo-32.png" alt="Delta Robotics" className="w-8 h-8 object-contain" />
-            <div className="font-headline-md text-headline-md font-bold text-primary-container">Delta Robotics</div>
+        <div className="px-6 mb-8 flex items-center gap-3">
+          <img
+            alt="Delta Robotics Logo"
+            className="w-8 h-8 object-contain"
+            src="/logo-32.png"
+          />
+          <div>
+            <h1 className="font-headline-sm text-headline-sm font-bold text-on-surface uppercase tracking-tight">
+              DELTA ROBOTICS
+            </h1>
+            <span className="font-label-sm text-label-sm text-secondary uppercase">
+              STUDENT PORTAL
+            </span>
           </div>
-          <div className="font-body-md text-body-md text-secondary">Intro to ROS 2</div>
-          <div className="font-body-md text-body-md text-on-surface-variant text-xs mt-1">Module 3: Motion Control</div>
         </div>
-        <nav className="px-3 flex flex-col gap-1">
+        <nav className="flex flex-col gap-1 px-3">
           {studentNavItems.map((item) => {
             const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
 
@@ -34,14 +43,14 @@ export function StudentSidebar() {
               <Link
                 key={item.title}
                 href={item.url}
-                className={`flex items-center gap-3 mx-2 p-3 rounded-lg transition-transform duration-150 active:translate-x-1 ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer active:scale-95 transition-colors ${
                   isActive
-                    ? "bg-primary-container text-on-primary-container font-bold"
-                    : "text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed-variant"
+                    ? "border-l-[3px] border-primary bg-accent-tint text-primary font-body-md-bold"
+                    : "text-secondary hover:bg-surface-container-low font-body-md text-body-md"
                 }`}
               >
                 <span
-                  className="material-symbols-outlined"
+                  className="material-symbols-outlined text-[20px]"
                   style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                 >
                   {item.icon}
@@ -53,23 +62,31 @@ export function StudentSidebar() {
         </nav>
       </div>
       <div className="px-3 flex flex-col gap-1">
-        <button className="bg-primary-container text-on-primary font-bold rounded-lg mx-2 p-3 mb-6 hover:bg-primary transition-colors">
-          Join Live Lab
+        <Link
+          href="/student/profile"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer active:scale-95 transition-colors ${
+            pathname === "/student/profile"
+              ? "border-l-[3px] border-primary bg-accent-tint text-primary font-body-md-bold"
+              : "text-secondary hover:bg-surface-container-low font-body-md text-body-md"
+          }`}
+        >
+          <span
+            className="material-symbols-outlined text-[20px]"
+            style={pathname === "/student/profile" ? { fontVariationSettings: "'FILL' 1" } : {}}
+          >
+            account_circle
+          </span>
+          Profile
+        </Link>
+        <button
+          onClick={async () => { await logout(); router.push("/login"); }}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-secondary hover:bg-surface-container-low transition-colors cursor-pointer active:scale-95 font-body-md text-body-md w-full text-left"
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            logout
+          </span>
+          Logout
         </button>
-        <Link
-          href="#"
-          className="flex items-center gap-3 mx-2 p-3 rounded-lg text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed-variant transition-transform duration-150 active:translate-x-1"
-        >
-          <span className="material-symbols-outlined">help</span>
-          Help
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center gap-3 mx-2 p-3 rounded-lg text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed-variant transition-transform duration-150 active:translate-x-1"
-        >
-          <span className="material-symbols-outlined">settings</span>
-          Settings
-        </Link>
       </div>
     </aside>
   );

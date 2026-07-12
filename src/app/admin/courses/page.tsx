@@ -45,18 +45,7 @@ export default function CoursesPage() {
                 <option>Published</option>
                 <option>Draft</option>
               </select>
-              <select className="px-4 py-2 border border-outline-variant rounded-lg text-sm bg-bg-alt focus:ring-1 focus:ring-primary outline-none">
-                <option>Category: All</option>
-                <option>Mechatronics</option>
-                <option>AI & Vision</option>
-                <option>Embedded Systems</option>
-              </select>
-              <select className="px-4 py-2 border border-outline-variant rounded-lg text-sm bg-bg-alt focus:ring-1 focus:ring-primary outline-none">
-                <option>Difficulty: All</option>
-                <option>Beginner</option>
-                <option>Intermediate</option>
-                <option>Advanced</option>
-              </select>
+
             </div>
           </div>
 
@@ -87,16 +76,12 @@ export default function CoursesPage() {
                 </div>
                 <div className="flex items-center gap-4 text-xs text-on-surface-variant mb-4">
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">category</span>
-                    Mechatronics
+                    <span className="material-symbols-outlined text-sm">school</span>
+                    School Level
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">signal_cellular_alt</span>
-                    Beginner
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">schedule</span>
-                    8 Weeks
+                    <span className="material-symbols-outlined text-sm">people</span>
+                    24 Enrolled
                   </div>
                 </div>
                 <div className="pt-4 border-t border-outline-variant flex justify-between items-center">
@@ -134,16 +119,12 @@ export default function CoursesPage() {
                 </div>
                 <div className="flex items-center gap-4 text-xs text-on-surface-variant mb-4">
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">category</span>
-                    AI & Vision
+                    <span className="material-symbols-outlined text-sm">school</span>
+                    College Level
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">signal_cellular_alt</span>
-                    Advanced
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">schedule</span>
-                    12 Weeks
+                    <span className="material-symbols-outlined text-sm">people</span>
+                    18 Enrolled
                   </div>
                 </div>
                 <div className="pt-4 border-t border-outline-variant flex justify-between items-center">
@@ -181,16 +162,12 @@ export default function CoursesPage() {
                 </div>
                 <div className="flex items-center gap-4 text-xs text-on-surface-variant mb-4">
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">category</span>
-                    Hardware
+                    <span className="material-symbols-outlined text-sm">school</span>
+                    College Level
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">signal_cellular_alt</span>
-                    Intermediate
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">schedule</span>
-                    10 Weeks
+                    <span className="material-symbols-outlined text-sm">people</span>
+                    31 Enrolled
                   </div>
                 </div>
                 <div className="pt-4 border-t border-outline-variant flex justify-between items-center">
@@ -252,8 +229,8 @@ export default function CoursesPage() {
                   <textarea className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" rows={3} defaultValue="Comprehensive foundational course covering robotic movement principles and mathematical modeling."></textarea>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Prerequisites</label>
-                  <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" placeholder="e.g. Basic Calculus, Physics I" type="text" />
+                  <label className="block text-xs font-bold text-on-surface mb-1.5">Price ($)</label>
+                  <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" type="number" defaultValue="299" />
                 </div>
               </div>
             </section>
@@ -281,69 +258,18 @@ export default function CoursesPage() {
 
             {/* Details & Pricing */}
             <section className="space-y-4">
-              <h4 className="text-label-sm uppercase text-on-surface-variant font-bold tracking-widest">Parameters & Fees</h4>
+              <h4 className="text-label-sm uppercase text-on-surface-variant font-bold tracking-widest">Details & Pricing</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Category</label>
+                  <label className="block text-xs font-bold text-on-surface mb-1.5">Level</label>
                   <select className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white">
-                    <option>Mechatronics</option>
-                    <option>AI & Vision</option>
-                    <option>Hardware</option>
+                    <option>School</option>
+                    <option>College</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Difficulty</label>
-                  <select className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white">
-                    <option>Beginner</option>
-                    <option>Intermediate</option>
-                    <option>Advanced</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Duration (Weeks)</label>
-                  <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" type="number" defaultValue="8" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-on-surface mb-1.5">Price ($)</label>
                   <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" type="number" defaultValue="299" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Commencing Date</label>
-                  <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" type="date" defaultValue="2023-10-15" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-on-surface mb-1.5">Closing Date</label>
-                  <input className="w-full px-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-1 focus:ring-primary outline-none bg-white" type="date" defaultValue="2023-10-01" />
-                </div>
-              </div>
-            </section>
-
-            {/* Resources Management */}
-            <section className="space-y-4">
-              <h4 className="text-label-sm uppercase text-on-surface-variant font-bold tracking-widest">Resources & Links</h4>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-on-surface">YouTube Lectures</label>
-                  <button className="text-[10px] text-primary font-bold hover:underline">+ Add Link</button>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input className="flex-1 px-4 py-2 border border-outline-variant rounded-lg text-xs bg-bg-alt" type="text" defaultValue="https://youtube.com/watch?v=..." />
-                    <button className="p-2 text-danger hover:bg-error-container rounded-lg transition-colors"><span className="material-symbols-outlined text-sm">delete</span></button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-on-surface">PDF Course Material</label>
-                  <button className="text-[10px] text-primary font-bold hover:underline">+ Upload PDF</button>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-outline-variant rounded-lg bg-surface-container-low">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-danger">picture_as_pdf</span>
-                    <span className="text-xs font-medium">syllabus_v2.pdf</span>
-                  </div>
-                  <button className="text-on-surface-variant hover:text-danger transition-colors"><span className="material-symbols-outlined text-sm">close</span></button>
                 </div>
               </div>
             </section>

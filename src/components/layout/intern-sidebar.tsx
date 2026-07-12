@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 const internNavItems = [
   { title: "Overview", url: "/intern/dashboard", icon: "dashboard" },
@@ -14,6 +15,8 @@ const internNavItems = [
 
 export function InternSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
 
   return (
     <aside className="hidden md:flex w-64 h-screen fixed left-0 top-0 flex-col justify-between py-6 z-40 bg-surface-container-low dark:bg-surface-container">
@@ -67,6 +70,13 @@ export function InternSidebar() {
           <span className="material-symbols-outlined">settings</span>
           Settings
         </Link>
+        <button
+          onClick={async () => { await logout(); router.push("/login"); }}
+          className="flex items-center gap-3 mx-2 p-3 rounded-lg text-on-surface-variant hover:bg-primary-fixed hover:text-on-primary-fixed-variant transition-transform duration-150 active:translate-x-1 w-full text-left"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          Logout
+        </button>
       </div>
     </aside>
   );

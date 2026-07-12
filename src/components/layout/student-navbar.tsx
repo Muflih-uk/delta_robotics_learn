@@ -1,19 +1,46 @@
 "use client";
 
+import * as React from "react";
+import { usePathname } from "next/navigation";
+
 export function StudentNavbar() {
+  const pathname = usePathname();
+
   return (
-    <header className="md:hidden sticky top-0 z-50 w-full flex justify-between px-4 bg-surface dark:bg-inverse-surface border-b border-secondary-container dark:border-secondary h-16 items-center">
-      <div className="flex items-center gap-2">
-        <img src="/logo-32.png" alt="Delta Robotics" className="w-7 h-7 object-contain" />
-        <span className="font-headline-md text-headline-md font-bold text-primary-container dark:text-primary-fixed-dim">Delta Robotics</span>
+    <header className="h-[64px] w-full sticky top-0 z-40 bg-surface border-b border-border flex items-center justify-between px-gutter shrink-0">
+      {/* Left: Search */}
+      <div className="flex-1 max-w-md">
+        <div className="relative flex items-center focus-within:ring-2 focus-within:ring-primary rounded-lg transition-all">
+          <span className="material-symbols-outlined absolute left-3 text-secondary">
+            search
+          </span>
+          <input
+            className="w-full h-10 pl-10 pr-4 bg-surface-container-lowest border border-border rounded-lg text-body-md focus:outline-none focus:border-transparent"
+            placeholder="Search courses, workshops..."
+            type="text"
+          />
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-on-surface cursor-pointer">search</span>
-        <img
-          alt="User profile"
-          className="w-8 h-8 rounded-full object-cover"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBylLapgmrt8GwkUdnWSHmwPzDaMX9WdTCmRf1Z1BwXHcjNv2Abcl10wqXBVNelU9ugSgow9OTT03RBGsHfTbe9nuC20lZXge29q8UR2VwARnwHy0aOmgwYqd0BUg0u82PJGQd1YeJeljoP0lGVe3aSgyUZMYtkiDXHQ_pMN-otwgffbxDzSt2iL1XpNP_G0QdjOu1yYWvcEo63taIZOs1cTLkM4bev8aYQ_HWnq05pgovFi7NUNnk2-g"
-        />
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-4">
+        <button className="text-secondary hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low focus:outline-none">
+          <span className="material-symbols-outlined">notifications</span>
+        </button>
+        <button className="text-secondary hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-container-low focus:outline-none">
+          <span className="material-symbols-outlined">help</span>
+        </button>
+        <div className="w-px h-6 bg-border mx-2"></div>
+        <button className="font-body-md-bold text-secondary hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-surface-container-low">
+          Support
+        </button>
+        <div className="ml-2">
+          <img
+            alt="User Avatar"
+            className="w-8 h-8 rounded-full border border-border object-cover"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB--e6dnBZNASTTRm6e2EaShxdV78ORhMx3REiS13VoKx7ymregT6J4hLZ6TV3zMgP7D3tcK2uiDlwNzSqDWSsmPif0vyJsNqHX-RokSvba5IlysPlJmtm-GGiNV4DWSoUAYnq_u9zRDp5_-ExlxeGVrGiFk8ctr6eBq6jWguwHJZ_gF4rrhpOP44CQhyp1f-Pbg4IZpz0gF-bQeT0DSalgOCxiY-J70kD2Ga_fHna74MiL3ybiYrQE1A"
+          />
+        </div>
       </div>
     </header>
   );

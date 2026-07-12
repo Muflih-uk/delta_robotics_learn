@@ -7,12 +7,14 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="flex h-screen overflow-hidden bg-surface-container-lowest text-on-surface font-body-md w-full">
       <StudentSidebar />
-      <div className="flex-1 flex flex-col md:ml-64">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <StudentNavbar />
-        {children}
-      </div>
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

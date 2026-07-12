@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/lib/auth-context";
 
 const adminNavItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: "dashboard" },
@@ -21,6 +22,8 @@ const adminNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
 
   return (
     <aside className="hidden md:flex w-[260px] h-screen sticky top-0 left-0 border-r border-border bg-bg-alt flex-col justify-between py-6 shrink-0 z-50">
@@ -66,7 +69,7 @@ export function AppSidebar() {
           })}
         </nav>
       </div>
-      <div className="px-3">
+      <div className="px-3 flex flex-col gap-1">
         <Link
           href="#"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-secondary hover:bg-surface-container-low transition-colors cursor-pointer active:scale-95 font-body-md text-body-md"
@@ -76,6 +79,15 @@ export function AppSidebar() {
           </span>
           User Profile
         </Link>
+        <button
+          onClick={async () => { await logout(); router.push("/login"); }}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-secondary hover:bg-surface-container-low transition-colors cursor-pointer active:scale-95 font-body-md text-body-md w-full text-left"
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            logout
+          </span>
+          Logout
+        </button>
       </div>
     </aside>
   );
