@@ -214,7 +214,7 @@ export interface GalleryImage {
   id: string;
   title: string;
   image_url: string;
-  workshop?: string;
+  workshop?: string | null;
   uploaded_by: string;
   created_at: string;
 }
@@ -222,5 +222,5 @@ export interface GalleryImage {
 export interface GalleryCreateRequest {
   title: string;
   image_url: string;
-  workshop?: string;
+  workshop?: string | null;
 }
