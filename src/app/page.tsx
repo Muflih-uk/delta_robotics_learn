@@ -193,7 +193,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="absolute inset-0 w-full h-full z-10 pointer-events-none flex items-center justify-center">
-                <img alt="Delta Robotics Logo" className="w-64 h-64 md:w-80 md:h-80 object-contain animate-logo-float relative z-10" src="/logo-48.png" />
+                <img alt="Delta Robotics Logo" className="w-64 h-64 md:w-80 md:h-80 object-contain animate-logo-float relative z-10" src="/logo.png" />
               </div>
             </div>
           </section>

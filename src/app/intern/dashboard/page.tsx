@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const recentEnrollments = [
     { id: 1, name: 'Sarah Jenkins', initials: 'SJ', course: 'Intro to Python Robotics', date: 'Oct 24, 2023', status: 'Active' },
     { id: 2, name: 'Marcus Chen', initials: 'MC', course: 'Advanced Kinematics', date: 'Oct 23, 2023', status: 'Pending' },
-    { id: 3, name: 'Elena Patel', initials: 'EP', course: 'Drone Assembly 101', date: 'Oct 22, 2023', status: 'Active' },
+    { id: 3, name: 'Elena E Carter', initials: 'EEC', course: 'Drone Assembly 101', date: 'Oct 22, 2023', status: 'Active' },
     { id: 4, name: 'David Rodriguez', initials: 'DR', course: 'Intro to Python Robotics', date: 'Oct 22, 2023', status: 'Active' },
   ];
 
