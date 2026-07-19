@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import type { Course, GalleryImage } from "@/lib/types";
 
-const courseCards = [
+const fallbackCourses = [
   {
     level: "HARDCORE",
     levelClass: "text-primary-container",
@@ -41,27 +43,75 @@ const courseCards = [
   },
 ];
 
-const galleryImages = [
-  {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPbD_X_Bm-8cJZjL1MlTDXs0peYK3CimzfuMuHyRHd-31CaX9lZ1a8wOiuopb0C8gwhTlRresu8J29joC3nch9uz8QTciPffhfpVTOGFZ0BP8bD0I7NUwDPLu5iygOrhFgzIU9UCnBYYhFRNSdlHlUAQQ3RQ2cJjQ7r3dR3Rcthen4SZd8jsvCGjOPLw5Ydl70nV_GkTWJSonxFFYw_KZ_Qg1wzPUcJC5Gz7yglNnnP_r2Kwc659rV0w",
-    span: "col-span-2 row-span-2",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoVHt9TIvGjYDoOa3VXZ-GTvZjJ21qnmVZrtex-9L74-MuUuEMG7bq4aY7-EPSs3zYHjxkVWwytMOGVEl7zbsDagooIbScJvTtJHfe_rLBHoPMJqXW_RscAGH4xs28QtXsWVjU2yf-ZBabhIiA8vDMZo__iuLOMOo8v0wwJ1cEHt6N_QAkMUHnuMvPXW_hWRFSRe4P26os8mpBl5er-djppKX611AI-BPQl0RaWF4XApTMLyT1d1eXGQ",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDBkgFspeoxK2scXQKK04pPHI2vbLSMzIAwWK74UA_kPwXkKibfULygThNf1llmZj9AA-fF81WPr7Vvq31ZT2Z35fdyenZG2Ymo5PXBD2rx70IAPP1yKg7ye86y9Mwo1ICH6xltdVrq9qiFGa1k5nQu062JRmIcKAr8EtSZk_050JyP6p34mwEiGn85OFvxB2Ihsd4GHnugI8_xhkLEq_TTbI4KryOnAMcbKV29mLA9faLRsqdZPo0zjw",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCf51tsk00yx5QqqP8WRXJ9ulJs4oR4-lUJaeGC7yXsjtb735DCH533uNR2OtTZGCJKjBOJ33xgaLlpZf211XTTNFPxirV16lEWcY559drKQ9tk9FMaYeXVp1EEMydjaMyKZ_hyqoekBpZTr7afiqfYWDLnIKbFy0FB1fps6bakSRiYVQ_isIjOu_d9qFrITOIHl-S-GUaXud43bAnNJHZnOQJ39pzWgn9FpdOb1rJuf1SVx7b-AvxspQ",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3zEBVP9JL6D_7rXHhrWEX_9SvEfUYbUsSMcDVk8QU_mNq-6FN4d8MftoeEvS65TJjeG1IZAIRVNyIuyCnaetQgeAvxWRgIHOtfJo8uFSosp3uINmZRWQ34BYghiGRhJkOgzAqrz-dDwgfQgGbJv75kl4BT1jcqmpWfq_UUetZv5_gBC4B0gTqPaV6wgT8foJfQ2FiOkm1Y4tGnsRqLWPX9QfIyVTz0vxGRN-2aS4wLz0UQH1Zp_snsA",
-  },
+const fallbackGallery = [
+  { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPbD_X_Bm-8cJZjL1MlTDXs0peYK3CimzfuMuHyRHd-31CaX9lZ1a8wOiuopb0C8gwhTlRresu8J29joC3nch9uz8QTciPffhfpVTOGFZ0BP8bD0I7NUwDPLu5iygOrhFgzIU9UCnBYYhFRNSdlHlUAQQ3RQ2cJjQ7r3dR3Rcthen4SZd8jsvCGjOPLw5Ydl70nV_GkTWJSonxFFYw_KZ_Qg1wzPUcJC5Gz7yglNnnP_r2Kwc659rV0w", span: "col-span-2 row-span-2" },
+  { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoVHt9TIvGjYDoOa3VXZ-GTvZjJ21qnmVZrtex-9L74-MuUuEMG7bq4aY7-EPSs3zYHjxkVWwytMOGVEl7zbsDagooIbScJvTtJHfe_rLBHoPMJqXW_RscAGH4xs28QtXsWVjU2yf-ZBabhIiA8vDMZo__iuLOMOo8v0wwJ1cEHt6N_QAkMUHnuMvPXW_hWRFSRe4P26os8mpBl5er-djppKX611AI-BPQl0RaWF4XApTMLyT1d1eXGQ" },
+  { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDBkgFspeoxK2scXQKK04pPHI2vbLSMzIAwWK74UA_kPwXkKibfULygThNf1llmZj9AA-fF81WPr7Vvq31ZT2Z35fdyenZG2Ymo5PXBD2rx70IAPP1yKg7ye86y9Mwo1ICH6xltdVrq9qiFGa1k5nQu062JRmIcKAr8EtSZk_050JyP6p34mwEiGn85OFvxB2Ihsd4GHnugI8_xhkLEq_TTbI4KryOnAMcbKV29mLA9faLRsqdZPo0zjw" },
+  { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuCf51tsk00yx5QqqP8WRXJ9ulJs4oR4-lUJaeGC7yXsjtb735DCH533uNR2OtTZGCJKjBOJ33xgaLlpZf211XTTNFPxirV16lEWcY559drKQ9tk9FMaYeXVp1EEMydjaMyKZ_hyqoekBpZTr7afiqfYWDLnIKbFy0FB1fps6bakSRiYVQ_isIjOu_d9qFrITOIHl-S-GUaXud43bAnNJHZnOQJ39pzWgn9FpdOb1rJuf1SVx7b-AvxspQ" },
+  { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3zEBVP9JL6D_7rXHhrWEX_9SvEfUYbUsSMcDVk8QU_mNq-6FN4d8MftoeEvS65TJjeG1IZAIRVNyIuyCnaetQgeAvxWRgIHOtfJo8uFSosp3uINmZRWQ34BYghiGRhJkOgzAqrz-dDwgfQgGbJv75kl4BT1jcqmpWfq_UUetZv5_gBC4B0gTqPaV6wgT8foJfQ2FiOkm1Y4tGnsRqLWPX9QfIyVTz0vxGRN-2aS4wLz0UQH1Zp_snsA" },
 ];
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+
+  useEffect(() => {
+    const ids = ["about", "courses", "workshops", "gallery", "contact"];
+    const observers: IntersectionObserver[] = [];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { rootMargin: "-20% 0px -60% 0px" }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [coursesData, galleryData] = await Promise.all([
+          api.courses.list(),
+          api.gallery.list(),
+        ]);
+        setCourses(coursesData);
+        setGalleryImages(galleryData);
+      } catch {
+        // Fall back to hardcoded data
+      } finally {
+        setLoaded(true);
+      }
+    }
+    load();
+  }, []);
+
+  const displayCourses = courses.length > 0
+    ? courses.slice(0, 4).map((c) => ({
+        level: c.level.toUpperCase(),
+        levelClass: "text-primary-container",
+        title: c.title,
+        desc: c.description,
+        duration: c.level === "school" ? "School Level" : "College Level",
+        price: `$${c.price}`,
+        img: c.thumbnail_url || fallbackCourses[0].img,
+      }))
+    : fallbackCourses;
+
+  const displayGallery = galleryImages.length > 0
+    ? galleryImages.slice(0, 5).map((g, i) => ({
+        src: g.image_url,
+        span: i === 0 ? "col-span-2 row-span-2" : "",
+      }))
+    : fallbackGallery;
 
   return (
     <>
@@ -89,7 +139,6 @@ export default function HomePage() {
       `}</style>
 
       <div className="min-h-screen flex flex-col bg-background">
-        {/* TopNavBar */}
         <header className="fixed top-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-sm border-b border-outline-variant">
           <div className="flex justify-between items-center max-w-7xl mx-auto px-4 md:px-10 h-20">
             <a className="flex items-center gap-2 font-headline-md text-headline-md font-extrabold tracking-tight text-primary" href="#">
@@ -97,11 +146,25 @@ export default function HomePage() {
               <span>Delta Robotics</span>
             </a>
             <nav className="hidden md:flex gap-6 items-center">
-              <a className="text-primary font-bold border-b-2 border-primary pb-1 font-label-sm text-label-sm" href="#about">About</a>
-              <a className="text-on-secondary-container hover:text-primary transition-colors font-label-sm text-label-sm hover:bg-primary-container/10 rounded-lg px-2 py-1" href="#courses">Courses</a>
-              <a className="text-on-secondary-container hover:text-primary transition-colors font-label-sm text-label-sm hover:bg-primary-container/10 rounded-lg px-2 py-1" href="#workshops">Workshops</a>
-              <a className="text-on-secondary-container hover:text-primary transition-colors font-label-sm text-label-sm hover:bg-primary-container/10 rounded-lg px-2 py-1" href="#gallery">Gallery</a>
-              <a className="text-on-secondary-container hover:text-primary transition-colors font-label-sm text-label-sm hover:bg-primary-container/10 rounded-lg px-2 py-1" href="#contact">Contact</a>
+              {[
+                { id: "about", label: "About" },
+                { id: "courses", label: "Courses" },
+                { id: "workshops", label: "Workshops" },
+                { id: "gallery", label: "Gallery" },
+                { id: "contact", label: "Contact" },
+              ].map(({ id, label }) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  className={`font-label-sm text-label-sm ${
+                    activeSection === id
+                      ? "text-primary font-bold border-b-2 border-primary pb-1"
+                      : "text-on-secondary-container hover:text-primary transition-colors hover:bg-primary-container/10 rounded-lg px-2 py-1"
+                  }`}
+                >
+                  {label}
+                </a>
+              ))}
             </nav>
             <div className="flex items-center gap-3">
               <a href="/login">
@@ -109,28 +172,37 @@ export default function HomePage() {
                   Login
                 </button>
               </a>
-              <button
-                className="md:hidden text-primary cursor-pointer"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
+              <button className="md:hidden text-primary cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                 <span className="material-symbols-outlined">menu</span>
               </button>
             </div>
           </div>
           {mobileMenuOpen && (
             <div className="md:hidden bg-surface border-t border-outline-variant px-4 py-4 flex flex-col gap-3">
-              <a className="text-primary font-bold font-label-sm text-label-sm" href="#about" onClick={() => setMobileMenuOpen(false)}>About</a>
-              <a className="text-on-secondary-container font-label-sm text-label-sm" href="#courses" onClick={() => setMobileMenuOpen(false)}>Courses</a>
-              <a className="text-on-secondary-container font-label-sm text-label-sm" href="#workshops" onClick={() => setMobileMenuOpen(false)}>Workshops</a>
-              <a className="text-on-secondary-container font-label-sm text-label-sm" href="#gallery" onClick={() => setMobileMenuOpen(false)}>Gallery</a>
-              <a className="text-on-secondary-container font-label-sm text-label-sm" href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              {[
+                { id: "about", label: "About" },
+                { id: "courses", label: "Courses" },
+                { id: "workshops", label: "Workshops" },
+                { id: "gallery", label: "Gallery" },
+                { id: "contact", label: "Contact" },
+              ].map(({ id, label }) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  className={`font-label-sm text-label-sm ${
+                    activeSection === id ? "text-primary font-bold" : "text-on-secondary-container"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {label}
+                </a>
+              ))}
               <a href="/login" className="bg-primary-container text-white text-center py-2 rounded-lg font-label-sm font-bold uppercase tracking-wider">Login</a>
             </div>
           )}
         </header>
 
         <main className="flex-grow pt-20">
-          {/* Hero Section */}
           <section className="max-w-7xl mx-auto px-4 md:px-10 py-20 md:py-[120px] grid md:grid-cols-2 gap-6 items-center relative">
             <div className="flex flex-col gap-6 relative z-20">
               <div className="bg-surface-variant/50 w-fit px-2 py-1 rounded text-xs font-bold text-on-surface-variant flex items-center gap-2 mb-2">
@@ -148,9 +220,11 @@ export default function HomePage() {
                     EXPLORE COURSES <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </button>
                 </a>
-                <button className="border border-primary-container text-primary-container px-12 py-4 rounded font-label-sm text-label-sm font-bold uppercase tracking-widest hover:bg-primary-container/10 transition-all flex items-center gap-2 cursor-pointer">
-                  JOIN WORKSHOP <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
-                </button>
+                <a href="/login">
+                  <button className="border border-primary-container text-primary-container px-12 py-4 rounded font-label-sm text-label-sm font-bold uppercase tracking-widest hover:bg-primary-container/10 transition-all flex items-center gap-2 cursor-pointer">
+                    JOIN WORKSHOP <span className="material-symbols-outlined text-[18px]">precision_manufacturing</span>
+                  </button>
+                </a>
               </div>
             </div>
 
@@ -198,7 +272,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* About Section */}
           <section className="bg-surface-container-low py-20" id="about">
             <div className="max-w-7xl mx-auto px-4 md:px-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -215,7 +288,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Courses Section */}
           <section className="max-w-7xl mx-auto px-4 md:px-10 py-20" id="courses">
             <div className="flex flex-col gap-6">
               <div className="flex justify-between items-end">
@@ -225,8 +297,8 @@ export default function HomePage() {
                 </a>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {courseCards.map((card) => (
-                  <div key={card.title} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                {displayCourses.map((card, i) => (
+                  <div key={i} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
                     <div className="h-48 bg-surface-container relative">
                       <div className="absolute top-0 right-0 w-8 h-8 bg-primary-container z-10" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}></div>
                       <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url("${card.img}")` }}></div>
@@ -249,7 +321,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Workshops Section */}
           <section className="bg-surface-container-low border-y border-outline-variant py-20" id="workshops">
             <div className="max-w-7xl mx-auto px-4 md:px-10 grid md:grid-cols-2 gap-6 items-center">
               <div className="order-2 md:order-1 relative h-64 md:h-full min-h-[300px] rounded-xl overflow-hidden border border-outline-variant">
@@ -259,7 +330,7 @@ export default function HomePage() {
                 <span className="text-primary-container font-label-sm text-label-sm font-bold tracking-widest uppercase">Hands-On Learning</span>
                 <h2 className="font-headline-md text-headline-md md:font-headline-lg md:text-headline-lg text-on-surface">Weekend Bootcamps &amp; Build Sessions</h2>
                 <p className="text-lg leading-7 text-on-surface-variant">
-                  Take theory into reality. Our intensive weekend workshops provide guided, hands-on experience building functional robots from scratch. Work with industry-standard tools and collaborate with peers under the guidance of expert instructors.
+                  Take theory into reality. Our intensive weekend workshops provide guided, hands-on experience building functional robots from scratch.
                 </p>
                 <ul className="flex flex-col gap-3 mt-3">
                   <li className="flex items-center gap-3 text-on-surface">
@@ -284,14 +355,13 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Gallery Section */}
           <section className="max-w-7xl mx-auto px-4 md:px-10 py-20 flex flex-col gap-6" id="gallery">
             <div className="text-center">
               <h2 className="font-headline-md text-headline-md md:font-headline-lg md:text-headline-lg text-on-surface">Student Gallery</h2>
               <p className="font-body-md text-body-md text-on-surface-variant mt-3 max-w-2xl mx-auto">A glimpse into the innovation happening in our labs.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-              {galleryImages.map((img, i) => (
+              {displayGallery.map((img, i) => (
                 <div key={i} className={`${img.span || ""} rounded-xl overflow-hidden border border-outline-variant ${i === 0 ? "h-64 md:h-auto" : "h-32 md:h-48"}`}>
                   <img className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" src={img.src} alt="" />
                 </div>
@@ -299,7 +369,6 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Contact Section */}
           <section className="bg-surface-container-low border-t border-outline-variant py-20" id="contact">
             <div className="max-w-7xl mx-auto px-4 md:px-10 grid md:grid-cols-2 gap-20">
               <div className="flex flex-col gap-6">
@@ -343,7 +412,6 @@ export default function HomePage() {
           </section>
         </main>
 
-        {/* Footer */}
         <footer className="w-full bg-surface-container-low border-t border-outline-variant">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-7xl mx-auto px-10 py-20">
             <div className="col-span-1 md:col-span-2 flex flex-col gap-3">
@@ -352,7 +420,7 @@ export default function HomePage() {
                 Pioneering the next generation of engineers through hands-on robotics education.
               </p>
               <p className="font-body-md text-body-md text-on-surface-variant mt-auto pt-6 opacity-80 hover:opacity-100 transition-opacity">
-                &copy; 2024 Delta Robotics. Pioneering the next generation of engineers through hands-on robotics education.
+                &copy; 2024 Delta Robotics.
               </p>
             </div>
             <div className="flex flex-col gap-3">

@@ -1,21 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export default function StudentProfilePage() {
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState({
-    firstName: "Alex",
-    lastName: "Chen",
-    email: "alex.chen@university.edu",
-    phone: "+1 (555) 123-4567",
-    studentId: "STU-2026-8901",
+    firstName: user?.first_name || "",
+    lastName: user?.last_name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    username: user?.username || "",
   });
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        username: user.username || "",
+      });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setFeedback("");
+    setSuccess("");
+    try {
+      const res = await api.updateProfile({
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        phone: profileData.phone,
+      });
+      if (res.success) setSuccess("Profile updated successfully.");
+      else setFeedback(res.message || "Update failed.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update profile";
+      setFeedback(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordFeedback("Passwords do not match.");
+      return;
+    }
+    setUpdatingPassword(true);
+    setPasswordFeedback("");
+    try {
+      const res = await api.resetPassword(passwordData.newPassword, "");
+      if (res.success) {
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setPasswordFeedback("Password updated successfully.");
+      } else {
+        setPasswordFeedback(res.message || "Password update failed.");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update password";
+      setPasswordFeedback(msg);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
   return (
     <div className="p-container-padding max-w-[1440px] mx-auto w-full">
@@ -43,7 +108,7 @@ export default function StudentProfilePage() {
             <h3 className="font-headline-md text-headline-md text-on-surface">
               {profileData.firstName} {profileData.lastName}
             </h3>
-            <p className="text-body-md text-on-surface-variant mb-4">{profileData.studentId}</p>
+            <p className="text-body-md text-on-surface-variant mb-4">@{profileData.username}</p>
             <div className="w-full pt-4 border-t border-border flex justify-between text-sm">
               <span className="text-on-surface-variant">Member Since</span>
               <span className="font-medium text-on-surface">January 2026</span>
@@ -59,7 +124,7 @@ export default function StudentProfilePage() {
               <h3 className="font-headline-md text-headline-md text-on-surface">Personal Information</h3>
               <p className="text-body-md text-on-surface-variant mt-1">Update your contact details.</p>
             </div>
-            <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="p-6 space-y-6" onSubmit={handleSaveProfile}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-on-surface uppercase tracking-wider block">First Name</label>
@@ -85,7 +150,7 @@ export default function StudentProfilePage() {
                     type="email"
                     className="w-full h-11 px-4 border border-border rounded-lg bg-surface-container-lowest text-body-md focus:ring-1 focus:ring-primary outline-none transition-all"
                     value={profileData.email}
-                    onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                    disabled
                   />
                 </div>
                 <div className="space-y-2">
@@ -98,12 +163,25 @@ export default function StudentProfilePage() {
                   />
                 </div>
               </div>
+              {feedback && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">error</span>
+                  {feedback}
+                </div>
+              )}
+              {success && (
+                <div className="p-3 bg-success/10 border border-success/20 rounded-lg text-success text-sm flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">check_circle</span>
+                  {success}
+                </div>
+              )}
               <div className="pt-4 flex justify-end">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-lg bg-primary-container text-white font-body-md-bold hover:brightness-110 shadow-sm transition-all"
+                  disabled={saving}
+                  className="px-6 py-2.5 rounded-lg bg-primary-container text-white font-body-md-bold hover:brightness-110 shadow-sm transition-all disabled:opacity-50"
                 >
-                  Save Changes
+                  {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -115,7 +193,7 @@ export default function StudentProfilePage() {
               <h3 className="font-headline-md text-headline-md text-on-surface">Security</h3>
               <p className="text-body-md text-on-surface-variant mt-1">Update your password to keep your account secure.</p>
             </div>
-            <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="p-6 space-y-6" onSubmit={handleUpdatePassword}>
               <div className="space-y-2 max-w-md">
                 <label className="text-xs font-bold text-on-surface uppercase tracking-wider block">Current Password</label>
                 <input
@@ -143,12 +221,23 @@ export default function StudentProfilePage() {
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                 />
               </div>
+              {passwordFeedback && (
+                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 max-w-md ${
+                  passwordFeedback.includes("successfully")
+                    ? "bg-success/10 border border-success/20 text-success"
+                    : "bg-destructive/10 border border-destructive/20 text-destructive"
+                }`}>
+                  <span className="material-symbols-outlined text-sm">{passwordFeedback.includes("successfully") ? "check_circle" : "error"}</span>
+                  {passwordFeedback}
+                </div>
+              )}
               <div className="pt-4 flex justify-start">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-lg border border-border font-body-md-bold text-on-surface hover:bg-surface-container-low transition-all"
+                  disabled={updatingPassword}
+                  className="px-6 py-2.5 rounded-lg border border-border font-body-md-bold text-on-surface hover:bg-surface-container-low transition-all disabled:opacity-50"
                 >
-                  Update Password
+                  {updatingPassword ? "Updating..." : "Update Password"}
                 </button>
               </div>
             </form>

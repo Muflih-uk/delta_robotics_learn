@@ -2,15 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { Download, Plus, RotateCcw, Edit2, Image as ImageIcon, Minus, Filter } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { InventoryItem } from '@/lib/types';
 import Drawer from '@/components/intern/Drawer';
 
 export default function InventoryPage() {
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'details' | 'add'>('details');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    api.inventory.list()
+      .then(setInventory)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     const handleOpenDrawer = () => {
@@ -21,57 +33,14 @@ export default function InventoryPage() {
     return () => window.removeEventListener('open-drawer', handleOpenDrawer);
   }, []);
 
-  const inventory = [
-    {
-      id: 1,
-      name: 'Arduino Uno R3',
-      sku: 'MCU-ARD-001',
-      category: 'Microcontrollers',
-      qty: 42,
-      minStock: 10,
-      status: 'In Stock',
-      notes: 'Standard kits...',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlb6SBjqE-UhK7JWO-ptGCYiEH5QmsIl9EtuBrwv6Tb8V32TzaBPD5pnCWKGzcZM7xmgkYccZSu24QZuVMCXRolN8hbOcMkijrSiR4ZY5ipoJKrBapPflyN0SRdzPydAQ5qQpgXUHSfqX3O_kP41oXaaAQR2NASXwS93HSDgSQxvBhS4CUncR_LNLJmLEnNJoo5uk1G1_v8RK6Vqdvg2E-pBSqVzQ-QNJzZIsMkeW6s7mPGrB7CQk8'
-    },
-    {
-      id: 2,
-      name: 'Ultrasonic HC-SR04',
-      sku: 'SNR-DST-022',
-      category: 'Sensors',
-      qty: 8,
-      minStock: 15,
-      status: 'Low Stock',
-      notes: 'Requires reor...',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfIepGuMxbUv7nSDiXYb3iOjbM9GKrlNlHCWbi9zyk4qwQ69q17_R1SWmpfw7G4zfOdbfHpOXaxq-FVQsYKkS03hesB3dmAZQc-kF5a-uC076U872rAJaKiWW3F2Qyaz_47Pc1M7K0HRV0acCA7Hvuu_273IPF5gt6c7UskEJjCLbrywy8ct9YxhyVZMJVVK5mwrKKdC9xq3BS6lhX2ilO7V1TE9GNvN0j9Vc_jWeku5AqxXEhIMY6'
-    },
-    {
-      id: 3,
-      name: 'NEMA 17 Stepper',
-      sku: 'MTR-STP-048',
-      category: 'Motors',
-      qty: 0,
-      minStock: 5,
-      status: 'Out of Stock',
-      notes: 'Pending deliv...',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlb6SBjqE-UhK7JWO-ptGCYiEH5QmsIl9EtuBrwv6Tb8V32TzaBPD5pnCWKGzcZM7xmgkYccZSu24QZuVMCXRolN8hbOcMkijrSiR4ZY5ipoJKrBapPflyN0SRdzPydAQ5qQpgXUHSfqX3O_kP41oXaaAQR2NASXwS93HSDgSQxvBhS4CUncR_LNLJmLEnNJoo5uk1G1_v8RK6Vqdvg2E-pBSqVzQ-QNJzZIsMkeW6s7mPGrB7CQk8'
-    },
-    {
-      id: 4,
-      name: 'Raspberry Pi 4 4GB',
-      sku: 'MCU-RPI-004',
-      category: 'Boards',
-      qty: 12,
-      minStock: 4,
-      status: 'In Stock',
-      notes: 'Used for AI/V...',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBFPiJ5t17CD48Ym4Cs3OIke29Qwf8J7de6gJBpoGdJwn2GqEYpdCD6YRqcZ8XmgKvHRnq421Yge2XvbAaBMyFdqa4ATBbswvXgSin8yg6eWMBQYkrU9o3Eo3ysC5LO8gd1S64RwpnaK38NuMA6sr3BASmwyvfHXnvtk8IjOKV9MKQTgTUrLRQ4VnDJclSVFY4O7RtXa9pNbWBzIi97StJ41iGoya8NTEEsWta5pXiKeVK0ZcrjsvDy'
-    }
-  ];
-
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === '' || item.category === categoryFilter;
-    const matchesStatus = statusFilter === '' || item.status === statusFilter;
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === '' || item.category_name === categoryFilter;
+    const matchesStatus = statusFilter === '' || 
+      (statusFilter === 'In Stock' && !item.is_low_stock && item.quantity > 0) ||
+      (statusFilter === 'Low Stock' && item.is_low_stock && item.quantity > 0) ||
+      (statusFilter === 'Out of Stock' && item.quantity === 0) ||
+      statusFilter === '';
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -155,6 +124,21 @@ export default function InventoryPage() {
         </div>
       </div>
 
+      {loading ? (
+        <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-pulse">
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-surface-container-low rounded" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-surface-container-low rounded w-1/3" />
+                  <div className="h-3 bg-surface-container-low rounded w-1/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
       <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
@@ -166,69 +150,63 @@ export default function InventoryPage() {
                 <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider">Qty</th>
                 <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider">Min Stock</th>
                 <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider">Notes</th>
+                <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider">Location</th>
                 <th className="py-4 px-6 font-semibold text-xs text-secondary uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredInventory.map((item) => (
+              {filteredInventory.map((item) => {
+                const statusLabel = item.quantity === 0 ? 'Out of Stock' : item.is_low_stock ? 'Low Stock' : 'In Stock';
+                const statusColor = item.quantity === 0 ? 'red' : item.is_low_stock ? 'amber' : 'green';
+                return (
                 <tr key={item.id} className="hover:bg-surface-container-low transition-colors group">
                   <td className="py-3 px-6">
-                    <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover border border-border bg-surface-container-low" />
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.name} className="w-12 h-12 rounded object-cover border border-border bg-surface-container-low" />
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-surface-container-low flex items-center justify-center">
+                        <ImageIcon size={16} className="text-secondary" />
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 px-6">
                     <div className="font-medium text-on-surface text-sm">{item.name}</div>
-                    <div className="text-xs text-secondary mt-0.5">SKU: {item.sku}</div>
+                    <div className="text-xs text-secondary mt-0.5">{item.category_name}</div>
                   </td>
                   <td className="py-3 px-6">
                     <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-surface-container-low border border-border text-on-surface uppercase tracking-wider">
-                      {item.category}
+                      {item.category_name}
                     </span>
                   </td>
                   <td className="py-3 px-6">
-                    <span className={`font-bold ${item.qty === 0 ? 'text-red-500' : item.qty < 10 ? 'text-amber-500' : 'text-on-surface'}`}>
-                      {item.qty}
+                    <span className={`font-bold ${statusColor === 'red' ? 'text-red-500' : statusColor === 'amber' ? 'text-amber-500' : 'text-on-surface'}`}>
+                      {item.quantity}
                     </span>
                   </td>
-                  <td className="py-3 px-6 text-secondary font-medium">{item.minStock}</td>
+                  <td className="py-3 px-6 text-secondary font-medium">{item.low_stock_threshold}</td>
                   <td className="py-3 px-6">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
-                      item.status === 'In Stock' ? 'bg-green-100 text-green-700' : 
-                      item.status === 'Low Stock' ? 'bg-amber-100 text-amber-700' : 
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        item.status === 'In Stock' ? 'bg-green-500' : 
-                        item.status === 'Low Stock' ? 'bg-amber-500' : 
-                        'bg-red-500'
-                      }`} />
-                      {item.status}
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-${statusColor}-100 text-${statusColor}-700`}>
+                      <span className={`w-1.5 h-1.5 rounded-full bg-${statusColor}-500`} />
+                      {statusLabel}
                     </span>
                   </td>
-                  <td className="py-3 px-6 text-secondary">{item.notes}</td>
+                  <td className="py-3 px-6 text-secondary">{item.location || '—'}</td>
                   <td className="py-3 px-6 text-right">
                     <button onClick={() => { setDrawerMode('details'); setIsDrawerOpen(true); }} className="p-2 text-secondary hover:text-on-surface rounded transition-colors">
                       <Edit2 size={16} />
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
         <div className="mt-auto px-6 py-4 border-t border-border flex items-center justify-between text-sm text-secondary bg-surface shrink-0">
-          <span>Showing 1 to 4 of 1,482 entries</span>
-          <div className="flex items-center gap-1">
-            <button className="px-3 py-1 border border-border rounded hover:bg-surface-container-low transition-colors" disabled>Prev</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded bg-primary-container text-on-primary-container font-medium">1</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low transition-colors font-medium text-on-surface">2</button>
-            <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low transition-colors font-medium text-on-surface">3</button>
-            <span className="w-8 flex items-center justify-center">...</span>
-            <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low transition-colors font-medium text-on-surface">371</button>
-            <button className="px-3 py-1 border border-border rounded hover:bg-surface-container-low transition-colors text-on-surface">Next</button>
-          </div>
+          <span>Showing {filteredInventory.length} of {inventory.length} items</span>
         </div>
       </div>
+      )}
 
       <Drawer
         isOpen={isDrawerOpen}

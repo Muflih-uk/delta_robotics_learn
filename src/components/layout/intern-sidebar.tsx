@@ -70,7 +70,7 @@ export function InternSidebar() {
           <span className="material-symbols-outlined text-[20px]">
             account_circle
           </span>
-          {user?.name || user?.email || "Profile"}
+          {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.email || "Profile"}
         </Link>
         <button
           onClick={async () => { await logout(); router.push("/login"); }}

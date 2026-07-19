@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import type { Course } from "@/lib/types";
 
 const levelStyles: Record<string, { color: string; badge: string }> = {
@@ -13,50 +15,6 @@ const levelStyles: Record<string, { color: string; badge: string }> = {
 const materialIcons: Record<string, string> = {
   video: "play_circle",
   pdf: "description",
-};
-
-const courseData: Record<string, Course> = {
-  "ros2-intro": {
-    id: "ros2-intro", title: "Intro to ROS 2",
-    description: "This comprehensive course takes you from ROS 2 fundamentals to advanced robotics application development. You'll learn how to build distributed robotic systems using ROS 2's powerful communication infrastructure. Through hands-on projects, you'll master topics, services, actions, and parameters while building real robot applications. By the end, you'll be able to design, implement, and deploy ROS 2 nodes for autonomous systems.",
-    level: "college", price: "1299.00",
-    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDzNA9wx-SR0bqA0pNKUNtz6mvtOuUhSBOlwAMWlHe7cMTmkte5-Une9wUepzHp_rTWSIGkBc_w2vee1LvXasW3w2F-n_JxvDeXGI0okjNUHROCY7oaRfglA7QW1uZj8ZzMz_RBm4VEUAr5gD8BMYhmuT28xZBbiSDMTP8BG6Uw1Ez3BsJsfx6ZNIf9PF65Z5kPijKz0KfEeCuT8bq_ibmw5tzhVW9buYIZuV-YT8XNZ_AIIGlzwXte8g",
-    is_published: true, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z", updated_at: "2026-07-06T10:00:00Z",
-    materials: [
-      { id: "m1", course: "ros2-intro", type: "video", title: "Introduction to ROS 2 Ecosystem", url: "https://youtube.com/example1", order_index: 1, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m2", course: "ros2-intro", type: "video", title: "Workspace Setup & Colcon Build", url: "https://youtube.com/example2", order_index: 2, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m3", course: "ros2-intro", type: "video", title: "Nodes, Topics & Publishers/Subscribers", url: "https://youtube.com/example3", order_index: 3, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m4", course: "ros2-intro", type: "video", title: "Services & Clients", url: "https://youtube.com/example4", order_index: 4, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m5", course: "ros2-intro", type: "video", title: "Actions & Action Servers", url: "https://youtube.com/example5", order_index: 5, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m6", course: "ros2-intro", type: "pdf", title: "ROS 2 Cheatsheet", url: "https://example.com/ros2-cheatsheet.pdf", order_index: 6, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-    ],
-    announcements: [
-      { id: "a1", course: "ros2-intro", title: "Welcome to ROS 2", content: "Please complete the setup guide before starting module 1.", created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-    ],
-    feedback: [
-      { id: "f1", course: "ros2-intro", student: "Alex M.", rating: 5, comment: "Best ROS 2 course I've taken. The hands-on projects really cemented the concepts.", created_at: "2026-07-06T10:00:00Z" },
-      { id: "f2", course: "ros2-intro", student: "Priya K.", rating: 5, comment: "Excellent structure. The progression from basics to capstone is very well paced.", created_at: "2026-07-06T10:00:00Z" },
-      { id: "f3", course: "ros2-intro", student: "James W.", rating: 4, comment: "Great content. Would love more advanced examples in future updates.", created_at: "2026-07-06T10:00:00Z" },
-    ],
-  },
-  "computer-vision": {
-    id: "computer-vision", title: "Computer Vision Basics",
-    description: "Dive into the world of computer vision with a focus on robotics applications. This course covers image processing fundamentals, feature detection, object recognition, and 3D vision techniques. Using OpenCV and deep learning frameworks, you'll build vision systems that can detect, track, and interpret visual information in real-time environments.",
-    level: "college", price: "950.00",
-    thumbnail_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCHUwCJgyFV3EO_osRDHCBtmDC31vl0d2nLbfqHzMZ4nPdGh-G0ACyhMQmSPjUu7jNC6au5yXnfLcISeSPNaXB9uWAwOYgMqi74-hOxUKrZVLhO0rUrSH5ZBPHyrqsHDe2wnxXOmLKpAA_3tZOUYk3Rk7ZNbvzi4ASOnoEiAaSaRkrP8V7D7vVKb1p8WcpHhjmywF3tuGeEfrYITdv__o_zvKxnAITSbkpD9kZMK71FT9ayv54esgUaWw",
-    is_published: true, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z", updated_at: "2026-07-06T10:00:00Z",
-    materials: [
-      { id: "m7", course: "computer-vision", type: "video", title: "Digital Image Representation", url: "", order_index: 1, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m8", course: "computer-vision", type: "video", title: "Color Spaces & Transformations", url: "", order_index: 2, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m9", course: "computer-vision", type: "video", title: "Feature Detection (Harris, SIFT)", url: "", order_index: 3, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-      { id: "m10", course: "computer-vision", type: "video", title: "Object Detection with YOLO", url: "", order_index: 4, created_by: "uuid-1", created_at: "2026-07-06T10:00:00Z" },
-    ],
-    announcements: [],
-    feedback: [
-      { id: "f4", course: "computer-vision", student: "Maria G.", rating: 5, comment: "Incredible depth for an introductory course. The YOLO module was fantastic.", created_at: "2026-07-06T10:00:00Z" },
-      { id: "f5", course: "computer-vision", student: "Tom L.", rating: 4, comment: "Well structured. Could use more practical exercises.", created_at: "2026-07-06T10:00:00Z" },
-    ],
-  },
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -76,18 +34,48 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function CourseDetailsPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
+  const [course, setCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"about" | "materials" | "reviews">("about");
 
-  const course = courseData[id];
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    api.courses.get(id)
+      .then(setCourse)
+      .catch((err) => setError(err.message || "Failed to load course"))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  if (!course) {
+  if (loading) {
+    return (
+      <main className="flex-1 p-4 md:p-10 bg-background min-h-screen max-w-[1440px] mx-auto w-full animate-pulse">
+        <div className="h-64 md:h-80 bg-surface-container rounded-xl mb-8" />
+        <div className="max-w-4xl space-y-4">
+          <div className="h-8 bg-surface-container rounded w-1/2" />
+          <div className="h-4 bg-surface-container rounded w-3/4" />
+          <div className="h-4 bg-surface-container rounded w-full" />
+          <div className="h-4 bg-surface-container rounded w-2/3" />
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !course) {
     return (
       <main className="flex-1 p-4 md:p-10 bg-background min-h-screen max-w-[1440px] mx-auto w-full">
         <div className="text-center py-20">
           <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">help</span>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">Course Not Found</h1>
-          <p className="text-body-md text-on-surface-variant mb-6">The course you're looking for doesn't exist.</p>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">{error ? "Error Loading Course" : "Course Not Found"}</h1>
+          <p className="text-body-md text-on-surface-variant mb-6">{error || "The course you're looking for doesn't exist."}</p>
+          {error && (
+            <button onClick={() => window.location.reload()} className="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-bold mr-3">Retry</button>
+          )}
           <Link href="/student/courses" className="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-bold">
             Browse Courses
           </Link>
@@ -212,12 +200,21 @@ export default function CourseDetailsPage() {
                   {avgRating > 0 ? `${avgRating}/5 (${course.feedback.length} reviews)` : "No reviews"}
                 </div>
               </div>
-              <Link
-                href={`/student/courses/${course.id}/enroll`}
-                className="block w-full text-center bg-primary-container text-on-primary rounded-lg px-6 py-3 font-bold hover:bg-primary transition-colors"
-              >
-                Enroll Now
-              </Link>
+              {user ? (
+                <Link
+                  href={`/student/courses/${course.id}/enroll`}
+                  className="block w-full text-center bg-primary-container text-on-primary rounded-lg px-6 py-3 font-bold hover:bg-primary transition-colors"
+                >
+                  Enroll Now
+                </Link>
+              ) : (
+                <button
+                  onClick={() => router.push(`/login?redirect=/student/courses/${course.id}`)}
+                  className="block w-full text-center bg-primary-container text-on-primary rounded-lg px-6 py-3 font-bold hover:bg-primary transition-colors cursor-pointer"
+                >
+                  Enroll Now
+                </button>
+              )}
             </div>
           </div>
         </div>

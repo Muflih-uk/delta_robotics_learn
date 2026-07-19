@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import type { Course } from "@/lib/types";
 
 export default function StudentExperiencePage() {
   const [formData, setFormData] = useState({
@@ -10,6 +12,39 @@ export default function StudentExperiencePage() {
     shortDesc: "",
     review: "",
   });
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    api.courses.list()
+      .then(setCourses)
+      .catch(() => {});
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.course || !formData.shortDesc) return;
+    setSubmitting(true);
+    setFeedback("");
+    try {
+      // Submit as feedback to the course (experience = course feedback + gallery)
+      // For now, we submit feedback. Gallery image upload would need a file upload endpoint.
+      await api.announcements.create({
+        course: formData.course,
+        title: formData.title,
+        content: `${formData.shortDesc}\n\n${formData.review}`,
+      });
+      setSubmitted(true);
+      setFormData({ title: "", course: "", shortDesc: "", review: "" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Submission failed";
+      setFeedback(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="p-container-padding max-w-[1440px] mx-auto w-full">
@@ -28,7 +63,17 @@ export default function StudentExperiencePage() {
           </p>
         </div>
 
-        <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+        {submitted ? (
+          <div className="p-10 text-center">
+            <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-success text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            </div>
+            <h3 className="font-headline-md text-headline-md text-on-surface mb-2">Experience Submitted</h3>
+            <p className="text-body-md text-on-surface-variant mb-6">Your experience has been submitted for review. It will appear in the gallery after approval.</p>
+            <Link href="/student/dashboard" className="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-bold">Go to Dashboard</Link>
+          </div>
+        ) : (
+        <form className="p-6 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label className="text-xs font-bold text-on-surface uppercase tracking-wider block">
               Experience Title <span className="text-error">*</span>
@@ -55,10 +100,9 @@ export default function StudentExperiencePage() {
                 required
               >
                 <option value="" disabled>Select a course</option>
-                <option value="ros2-intro">Intro to ROS 2</option>
-                <option value="computer-vision">Computer Vision Basics</option>
-                <option value="autonomous-systems">Autonomous Systems</option>
-                <option value="robotics-101">Robotics Fundamentals</option>
+                {courses.filter(c => c.is_published).map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
               </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
                 expand_more
@@ -120,10 +164,24 @@ export default function StudentExperiencePage() {
               type="submit"
               className="px-6 py-2.5 rounded-lg bg-primary-container text-white font-body-md-bold hover:brightness-110 shadow-sm transition-all"
             >
-              Submit Experience
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Submitting...
+                </span>
+              ) : "Submit Experience"}
             </button>
           </div>
+          {feedback && (
+            <div className="pt-0 pb-4 px-6">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
+                {feedback}
+              </div>
+            </div>
+          )}
         </form>
+        )}
       </div>
     </div>
   );

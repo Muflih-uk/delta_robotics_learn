@@ -1,6 +1,8 @@
 "use client";
 
-import { CheckCircle2, XCircle, Clock, DollarSign, UserCheck, Ban } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle2, Clock, DollarSign, UserCheck, Ban } from "lucide-react";
+import { api } from "@/lib/api";
 import type { Enrollment, EnrollmentStatus } from "@/lib/types";
 
 const statusConfig: Record<EnrollmentStatus, { label: string; className: string; bgClassName: string; dotClassName: string; icon: typeof Clock }> = {
@@ -11,23 +13,24 @@ const statusConfig: Record<EnrollmentStatus, { label: string; className: string;
   rejected: { label: "Rejected", className: "text-red-700", bgClassName: "bg-red-100", dotClassName: "bg-red-500", icon: Ban },
 };
 
-const enrollments: Enrollment[] = [
-  { id: "ENR-001", student: "Rahul Kumar", course: "ros2-intro", course_title: "Intro to ROS 2", status: "payment_verification", approved_by: null, approved_at: null, created_at: "2026-07-10T10:00:00Z", updated_at: "2026-07-10T10:00:00Z" },
-  { id: "ENR-002", student: "Sneha Patel", course: "ros2-intro", course_title: "Intro to ROS 2", status: "active", approved_by: "admin-1", approved_at: "2026-07-09T14:30:00Z", created_at: "2026-07-08T09:00:00Z", updated_at: "2026-07-09T14:30:00Z" },
-  { id: "ENR-003", student: "Vikram Singh", course: "ros2-intro", course_title: "Intro to ROS 2", status: "pending_payment", approved_by: null, approved_at: null, created_at: "2026-07-08T11:20:00Z", updated_at: "2026-07-08T11:20:00Z" },
-  { id: "ENR-004", student: "Neha Gupta", course: "ros2-intro", course_title: "Intro to ROS 2", status: "rejected", approved_by: "admin-1", approved_at: "2026-07-08T16:00:00Z", created_at: "2026-07-07T08:30:00Z", updated_at: "2026-07-08T16:00:00Z" },
-  { id: "ENR-005", student: "Amit Desai", course: "ros2-intro", course_title: "Intro to ROS 2", status: "active", approved_by: "admin-1", approved_at: "2026-07-07T12:00:00Z", created_at: "2026-07-06T09:15:00Z", updated_at: "2026-07-07T12:00:00Z" },
-  { id: "ENR-006", student: "Priya Sharma", course: "ros2-intro", course_title: "Intro to ROS 2", status: "pending_enrollment", approved_by: "admin-1", approved_at: "2026-07-11T10:00:00Z", created_at: "2026-07-05T14:00:00Z", updated_at: "2026-07-11T10:00:00Z" },
-];
-
-const statusSummary: { status: EnrollmentStatus; count: number; icon: typeof Clock; label: string }[] = [
-  { status: "payment_verification", count: 1, icon: DollarSign, label: "Payment Verification" },
-  { status: "pending_enrollment", count: 1, icon: UserCheck, label: "Pending Enrollment" },
-  { status: "active", count: 2, icon: CheckCircle2, label: "Active this month" },
-  { status: "rejected", count: 1, icon: Ban, label: "Rejected" },
-];
-
 export default function EnrollmentsPage() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api.enrollments.myEnrollments()
+      .then(setEnrollments)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statusSummary: { status: EnrollmentStatus; count: number; icon: typeof Clock; label: string }[] = [
+    { status: "payment_verification", count: enrollments.filter(e => e.status === "payment_verification").length, icon: DollarSign, label: "Payment Verification" },
+    { status: "pending_enrollment", count: enrollments.filter(e => e.status === "pending_enrollment").length, icon: UserCheck, label: "Pending Enrollment" },
+    { status: "active", count: enrollments.filter(e => e.status === "active").length, icon: CheckCircle2, label: "Active" },
+    { status: "rejected", count: enrollments.filter(e => e.status === "rejected").length, icon: Ban, label: "Rejected" },
+  ];
   return (
     <div className="flex flex-col h-full gap-6 p-6">
       <div className="flex justify-between items-end shrink-0">

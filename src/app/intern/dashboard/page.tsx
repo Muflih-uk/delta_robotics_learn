@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { 
   Users, 
   GraduationCap, 
@@ -10,27 +11,54 @@ import {
   MoreVertical,
   User
 } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { Enrollment, Workshop, InventoryItem } from '@/lib/types';
 
 export default function DashboardPage() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      api.enrollments.myEnrollments().catch(() => [] as Enrollment[]),
+      api.workshops.list().catch(() => [] as Workshop[]),
+      api.inventory.list().catch(() => [] as InventoryItem[]),
+    ])
+      .then(([enr, ws, inv]) => {
+        setEnrollments(enr);
+        setWorkshops(ws);
+        setInventoryItems(inv);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeEnrollments = enrollments.filter(e => e.status === "active");
+  const lowStockItems = inventoryItems.filter(i => i.is_low_stock);
+  const upcomingWorkshopsList = workshops.filter(w => w.status === "upcoming").slice(0, 3);
+
   const metrics = [
-    { label: 'Total Students', value: '1,248', icon: Users, change: '+12% this month', trend: 'up' },
-    { label: 'Active Enrollments', value: '856', icon: GraduationCap, change: '+5% this month', trend: 'up' },
-    { label: 'Revenue (MTD)', value: '$42.5k', icon: CreditCard, change: '+18% vs last month', trend: 'up' },
-    { label: 'Pending Inventory', value: '24', icon: Package, change: 'Action required', trend: 'down', alert: true },
+    { label: 'Total Enrollments', value: enrollments.length.toString(), icon: Users, change: `${activeEnrollments.length} active`, trend: 'up' as const },
+    { label: 'Active Enrollments', value: activeEnrollments.length.toString(), icon: GraduationCap, change: `${(activeEnrollments.length / Math.max(enrollments.length, 1) * 100).toFixed(0)}% of total`, trend: 'up' as const },
+    { label: 'Workshops', value: workshops.length.toString(), icon: CreditCard, change: `${upcomingWorkshopsList.length} upcoming`, trend: 'up' as const },
+    { label: 'Low Stock Items', value: lowStockItems.length.toString(), icon: Package, change: 'Action required', trend: 'down' as const, alert: lowStockItems.length > 0 },
   ];
 
-  const recentEnrollments = [
-    { id: 1, name: 'Sarah Jenkins', initials: 'SJ', course: 'Intro to Python Robotics', date: 'Oct 24, 2023', status: 'Active' },
-    { id: 2, name: 'Marcus Chen', initials: 'MC', course: 'Advanced Kinematics', date: 'Oct 23, 2023', status: 'Pending' },
-    { id: 3, name: 'Elena E Carter', initials: 'EEC', course: 'Drone Assembly 101', date: 'Oct 22, 2023', status: 'Active' },
-    { id: 4, name: 'David Rodriguez', initials: 'DR', course: 'Intro to Python Robotics', date: 'Oct 22, 2023', status: 'Active' },
-  ];
+  const recentEnrollments = enrollments.slice(0, 4).map(e => ({
+    id: e.id,
+    name: e.student,
+    initials: e.student.split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase(),
+    course: e.course_title,
+    date: new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    status: e.status === 'active' ? 'Active' as const : e.status === 'rejected' ? 'Rejected' as const : 'Pending' as const,
+  }));
 
-  const upcomingWorkshops = [
-    { date: 'Oct 28', title: 'VEX Robotics Challenge', instructor: 'Dr. A. Smith' },
-    { date: 'Nov 02', title: 'ROS Fundamentals', instructor: 'B. Johnson' },
-    { date: 'Nov 15', title: '3D Printing for Bots', instructor: 'C. Davis' },
-  ];
+  const upcomingWorkshops = upcomingWorkshopsList.map(ws => ({
+    date: new Date(ws.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    title: ws.title,
+    instructor: ws.location || 'TBD',
+  }));
 
   return (
     <div className="flex flex-col h-full gap-6 p-6 overflow-y-auto">
@@ -159,27 +187,23 @@ export default function DashboardPage() {
               </h3>
             </div>
             <div className="p-4 flex flex-col gap-3 text-sm">
-              <div className="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-border">
-                <div>
-                  <p className="font-medium text-on-surface">Servo Motors (Micro)</p>
-                  <p className="text-xs text-secondary mt-0.5">SKU: SM-104</p>
-                </div>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                  3 Left
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-border">
-                <div>
-                  <p className="font-medium text-on-surface">Arduino Uno R3</p>
-                  <p className="text-xs text-secondary mt-0.5">SKU: AU-R3</p>
-                </div>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                  Out of Stock
-                </span>
-              </div>
-              <button className="w-full py-2 mt-1 text-primary font-medium hover:underline text-sm text-center">
-                Manage Inventory →
-              </button>
+              {lowStockItems.length === 0 ? (
+                <p className="text-sm text-secondary text-center py-4">No low stock items.</p>
+              ) : (
+                lowStockItems.slice(0, 5).map(item => (
+                  <div key={item.id} className="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-border">
+                    <div>
+                      <p className="font-medium text-on-surface">{item.name}</p>
+                      <p className="text-xs text-secondary mt-0.5">{item.category_name}</p>
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                      item.quantity === 0 ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-amber-100 text-amber-700 border border-amber-200'
+                    }`}>
+                      {item.quantity === 0 ? 'Out of Stock' : `${item.quantity} Left`}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

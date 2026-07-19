@@ -2,15 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { Search, MoreVertical, Clock, CalendarDays, Image as ImageIcon } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { Course } from '@/lib/types';
 import Drawer from '@/components/intern/Drawer';
 
 export default function CoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    api.courses.list()
+      .then(setCourses)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     const handleOpenDrawer = () => setIsDrawerOpen(true);
@@ -18,51 +29,10 @@ export default function CoursesPage() {
     return () => window.removeEventListener('open-drawer', handleOpenDrawer);
   }, []);
 
-  const courses = [
-    {
-      id: 1,
-      title: 'Intro to Python Robotics',
-      type: 'School',
-      status: 'Published',
-      category: 'Programming',
-      difficulty: 'Beginner',
-      duration: '8 Weeks',
-      price: '$299',
-      lastEdited: '2 days ago',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlb6SBjqE-UhK7JWO-ptGCYiEH5QmsIl9EtuBrwv6Tb8V32TzaBPD5pnCWKGzcZM7xmgkYccZSu24QZuVMCXRolN8hbOcMkijrSiR4ZY5ipoJKrBapPflyN0SRdzPydAQ5qQpgXUHSfqX3O_kP41oXaaAQR2NASXwS93HSDgSQxvBhS4CUncR_LNLJmLEnNJoo5uk1G1_v8RK6Vqdvg2E-pBSqVzQ-QNJzZIsMkeW6s7mPGrB7CQk8'
-    },
-    {
-      id: 2,
-      title: 'Advanced Kinematics',
-      type: 'College',
-      status: 'Draft',
-      category: 'Hardware',
-      difficulty: 'Advanced',
-      duration: '12 Weeks',
-      price: '$599',
-      lastEdited: '5 hrs ago',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfIepGuMxbUv7nSDiXYb3iOjbM9GKrlNlHCWbi9zyk4qwQ69q17_R1SWmpfw7G4zfOdbfHpOXaxq-FVQsYKkS03hesB3dmAZQc-kF5a-uC076U872rAJaKiWW3F2Qyaz_47Pc1M7K0HRV0acCA7Hvuu_273IPF5gt6c7UskEJjCLbrywy8ct9YxhyVZMJVVK5mwrKKdC9xq3BS6lhX2ilO7V1TE9GNvN0j9Vc_jWeku5AqxXEhIMY6'
-    },
-    {
-      id: 3,
-      title: 'Machine Vision Basics',
-      type: 'College',
-      status: 'Published',
-      category: 'AI',
-      difficulty: 'Intermediate',
-      duration: '10 Weeks',
-      price: '$450',
-      lastEdited: '1 week ago',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBFPiJ5t17CD48Ym4Cs3OIke29Qwf8J7de6gJBpoGdJwn2GqEYpdCD6YRqcZ8XmgKvHRnq421Yge2XvbAaBMyFdqa4ATBbswvXgSin8yg6eWMBQYkrU9o3Eo3ysC5LO8gd1S64RwpnaK38NuMA6sr3BASmwyvfHXnvtk8IjOKV9MKQTgTUrLRQ4VnDJclSVFY4O7RtXa9pNbWBzIi97StJ41iGoya8NTEEsWta5pXiKeVK0ZcrjsvDy'
-    }
-  ];
-
   const filteredCourses = courses.filter(course => {
-    const matchesType = typeFilter === '' || course.type === typeFilter;
-    const matchesStatus = statusFilter === '' || course.status === statusFilter;
-    const matchesCategory = categoryFilter === '' || course.category === categoryFilter;
-    const matchesDifficulty = difficultyFilter === '' || course.difficulty === difficultyFilter;
-    return matchesType && matchesStatus && matchesCategory && matchesDifficulty;
+    const matchesType = typeFilter === '' || course.level === typeFilter.toLowerCase();
+    const matchesStatus = statusFilter === '' || (statusFilter === 'Published' ? course.is_published : !course.is_published);
+    return matchesType && matchesStatus;
   });
 
   return (
@@ -123,18 +93,32 @@ export default function CoursesPage() {
         </div>
       </div>
 
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-surface border border-border rounded-xl overflow-hidden animate-pulse">
+              <div className="h-40 bg-surface-container-low" />
+              <div className="p-4 space-y-3">
+                <div className="h-5 bg-surface-container-low rounded w-3/4" />
+                <div className="h-4 bg-surface-container-low rounded w-1/2" />
+                <div className="h-4 bg-surface-container-low rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-4">
         {filteredCourses.map((course) => (
           <div key={course.id} className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative flex flex-col">
             <div className="h-40 bg-surface-container-low relative shrink-0">
-              <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+              <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
               <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-on-surface uppercase tracking-wider shadow-sm">
-                {course.type}
+                {course.level === 'school' ? 'School' : 'College'}
               </div>
               <div className={`absolute top-3 right-3 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm ${
-                course.status === 'Published' ? 'bg-green-100 text-green-700' : 'bg-surface-container-low text-secondary'
+                course.is_published ? 'bg-green-100 text-green-700' : 'bg-surface-container-low text-secondary'
               }`}>
-                {course.status}
+                {course.is_published ? 'Published' : 'Draft'}
               </div>
             </div>
             
@@ -146,29 +130,26 @@ export default function CoursesPage() {
                 </button>
               </div>
               
-              <div className="flex items-center gap-2 mb-4 text-xs font-semibold text-secondary uppercase">
-                <span className="bg-surface-container-low px-2 py-1 rounded">{course.category}</span>
-                <span>•</span>
-                <span>{course.difficulty}</span>
-              </div>
+              <p className="text-sm text-secondary line-clamp-2 mb-4">{course.description}</p>
               
               <div className="grid grid-cols-2 gap-y-2 text-sm border-t border-border pt-3 mt-auto">
                 <div className="flex items-center gap-1.5 text-secondary">
                   <Clock size={14} />
-                  {course.duration}
+                  {new Date(course.updated_at).toLocaleDateString()}
                 </div>
                 <div className="flex items-center gap-1.5 text-on-surface font-bold justify-end">
-                  {course.price}
+                  ${parseFloat(course.price).toLocaleString()}
                 </div>
                 <div className="col-span-2 text-xs text-secondary mt-1 flex items-center gap-1.5">
                   <CalendarDays size={14} />
-                  Last edited: {course.lastEdited}
+                  Created: {new Date(course.created_at).toLocaleDateString()}
                 </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      )}
 
       <Drawer
         isOpen={isDrawerOpen}

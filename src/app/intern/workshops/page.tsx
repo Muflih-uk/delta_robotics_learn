@@ -2,11 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Image as ImageIcon, Plus } from 'lucide-react';
+import { api } from '@/lib/api';
+import type { Workshop } from '@/lib/types';
 import Drawer from '@/components/intern/Drawer';
 
 export default function WorkshopsPage() {
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    api.workshops.list()
+      .then(setWorkshops)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     const handleOpenDrawer = () => setIsDrawerOpen(true);
@@ -17,52 +29,12 @@ export default function WorkshopsPage() {
   const tabs = [
     { id: 'all', label: 'All Events' },
     { id: 'upcoming', label: 'Upcoming' },
-    { id: 'archived', label: 'Archived' },
-  ];
-
-  const workshops = [
-    {
-      id: 1,
-      title: 'VEX Robotics Masterclass',
-      date: 'Oct 28, 2023',
-      venue: 'Innovation Lab, Campus A',
-      status: 'archived',
-      photos: 24,
-      avatars: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCW28K0sykwMOeIwldfDFemwq4_WvppjTi-l57yo72385BnWk86r1N-tN09khHpbWqX5UCpd2i_D8SqonQTvJYXhaA2m97MLRim6yFqcOyfKet7H7WHZtuIEtJ13_QyCgkMBYtM8vtJPOs29jEXpRa2h9iJ9VUuTg7JICSKNP0eV--eBaZf2QMxLCdmq4B-ALtJ82iKPow0PsDf-3Au6DZS9MCzZ4dBlcrJrTK5Rmnju8tiD1ho1ABB',
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAH2P8PRktStRQ4Rc0nKOIjPd4jnZkJ1REtPTAeRQgF7GBe8ZplzkwV0J8xYR1mcwe3KztruNyiv78JAzCOb_-t0t1tbOs--N2qX0ZlUD34dQf7K6x7cTxthvNE-QOVqqdpNC7bwgbAZladjsaKeF9bNw3RM8ACzTY7hUfJlw-1qMhO-znFPdOy4FpZWTvF2FrJ_-r25CKMVH8sYHZlRfzHsp4SXk8uLqaTOsHP4ssYjBTmRnVHFCoC'
-      ],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlb6SBjqE-UhK7JWO-ptGCYiEH5QmsIl9EtuBrwv6Tb8V32TzaBPD5pnCWKGzcZM7xmgkYccZSu24QZuVMCXRolN8hbOcMkijrSiR4ZY5ipoJKrBapPflyN0SRdzPydAQ5qQpgXUHSfqX3O_kP41oXaaAQR2NASXwS93HSDgSQxvBhS4CUncR_LNLJmLEnNJoo5uk1G1_v8RK6Vqdvg2E-pBSqVzQ-QNJzZIsMkeW6s7mPGrB7CQk8'
-    },
-    {
-      id: 2,
-      title: 'Advanced Kinematics',
-      date: 'Nov 04, 2023',
-      venue: 'Delta Hall, Engineering Bldg',
-      status: 'upcoming',
-      photos: 12,
-      avatars: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCfIepGuMxbUv7nSDiXYb3iOjbM9GKrlNlHCWbi9zyk4qwQ69q17_R1SWmpfw7G4zfOdbfHpOXaxq-FVQsYKkS03hesB3dmAZQc-kF5a-uC076U872rAJaKiWW3F2Qyaz_47Pc1M7K0HRV0acCA7Hvuu_273IPF5gt6c7UskEJjCLbrywy8ct9YxhyVZMJVVK5mwrKKdC9xq3BS6lhX2ilO7V1TE9GNvN0j9Vc_jWeku5AqxXEhIMY6'
-      ],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfIepGuMxbUv7nSDiXYb3iOjbM9GKrlNlHCWbi9zyk4qwQ69q17_R1SWmpfw7G4zfOdbfHpOXaxq-FVQsYKkS03hesB3dmAZQc-kF5a-uC076U872rAJaKiWW3F2Qyaz_47Pc1M7K0HRV0acCA7Hvuu_273IPF5gt6c7UskEJjCLbrywy8ct9YxhyVZMJVVK5mwrKKdC9xq3BS6lhX2ilO7V1TE9GNvN0j9Vc_jWeku5AqxXEhIMY6'
-    },
-    {
-      id: 3,
-      title: 'IoT & Sensor Integration',
-      date: 'Dec 01, 2023',
-      venue: 'Embedded Systems Lab',
-      status: 'upcoming',
-      photos: 18,
-      avatars: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAWr39UFDTppTbiDwb9ejqoTQp8ZHwgnfLOwpKFNX_f5MfJfQerHuAj-gDn4k87d5tyzhltvFX_EAdcFC7_EF1pGuqRSF3Vt95SHP-ZQUtn60ETaC8iMuqQDiVVgnyPHz1wn-p8du6mHzgl1nCgR-L9kia1c-xKk9WuxiqzRKkXv-Qv9vk8UF_0MyODkOtk_UyR8Dm0FS_iVEfS7-ZKbhYrFTvYbI3cs82V7p852NXl6-tOqbZP_j8D'
-      ],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBFPiJ5t17CD48Ym4Cs3OIke29Qwf8J7de6gJBpoGdJwn2GqEYpdCD6YRqcZ8XmgKvHRnq421Yge2XvbAaBMyFdqa4ATBbswvXgSin8yg6eWMBQYkrU9o3Eo3ysC5LO8gd1S64RwpnaK38NuMA6sr3BASmwyvfHXnvtk8IjOKV9MKQTgTUrLRQ4VnDJclSVFY4O7RtXa9pNbWBzIi97StJ41iGoya8NTEEsWta5pXiKeVK0ZcrjsvDy'
-    }
+    { id: 'completed', label: 'Archived' },
   ];
 
   const filteredWorkshops = workshops.filter(ws => {
     if (activeTab === 'all') return true;
-    return ws.status === activeTab;
+    return activeTab === 'archived' ? (ws.status === 'completed' || ws.status === 'cancelled') : ws.status === activeTab;
   });
 
   return (
@@ -91,14 +63,38 @@ export default function WorkshopsPage() {
         ))}
       </div>
 
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-surface border border-border rounded-xl overflow-hidden animate-pulse">
+              <div className="h-40 bg-surface-container-low" />
+              <div className="p-5 space-y-3">
+                <div className="h-5 bg-surface-container-low rounded w-3/4" />
+                <div className="h-4 bg-surface-container-low rounded w-1/2" />
+                <div className="h-4 bg-surface-container-low rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-4">
         {filteredWorkshops.map((ws) => (
           <div key={ws.id} className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col">
             <div className="h-40 bg-surface-container-low relative shrink-0">
-              <img src={ws.image} alt={ws.title} className="w-full h-full object-cover" />
+              <img src={ws.image_url} alt={ws.title} className="w-full h-full object-cover" />
             </div>
             
             <div className="p-5 flex flex-col flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${
+                  ws.status === 'upcoming' ? 'bg-primary/10 text-primary' :
+                  ws.status === 'ongoing' ? 'bg-success/10 text-success' :
+                  ws.status === 'completed' ? 'bg-surface-container-low text-secondary' :
+                  'bg-destructive/10 text-destructive'
+                }`}>
+                  {ws.status}
+                </span>
+              </div>
               <h3 className="font-semibold text-on-surface text-lg mb-4 line-clamp-1 group-hover:text-primary transition-colors">
                 {ws.title}
               </h3>
@@ -106,32 +102,22 @@ export default function WorkshopsPage() {
               <div className="space-y-2 mb-6 text-sm text-secondary">
                 <div className="flex items-center gap-2">
                   <Calendar size={16} />
-                  <span>{ws.date}</span>
+                  <span>{new Date(ws.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin size={16} />
-                  <span className="line-clamp-1">{ws.venue}</span>
+                  <span className="line-clamp-1">{ws.location}</span>
                 </div>
               </div>
               
               <div className="flex items-center justify-between mt-auto pt-4 border-t border-border">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-secondary uppercase tracking-wider">
-                  <ImageIcon size={14} />
-                  {ws.photos} Photos
-                </span>
-                <div className="flex -space-x-2">
-                  {ws.avatars.map((avatar, i) => (
-                    <img key={i} src={avatar} alt="" className="w-6 h-6 rounded-full border-2 border-white object-cover bg-surface-container-low" />
-                  ))}
-                  <div className="w-6 h-6 rounded-full border-2 border-white bg-primary-container text-on-primary-container flex items-center justify-center text-[10px] font-bold">
-                    +{Math.floor(Math.random() * 10) + 2}
-                  </div>
-                </div>
+                <span className="text-xs text-secondary">{ws.total_registrations} registered</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+      )}
 
       <button onClick={() => setIsDrawerOpen(true)} className="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-colors lg:hidden z-20">
         <Plus size={24} />

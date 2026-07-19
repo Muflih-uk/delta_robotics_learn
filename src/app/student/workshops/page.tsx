@@ -1,130 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Import types from lib/types
 import type { Workshop, WorkshopRegistration, WorkshopStatus } from "@/lib/types";
-
-// Mock workshop data shaped to API types
-const mockWorkshops: Workshop[] = [
-  {
-    id: "ws-1",
-    title: "Robot Arm Assembly Masterclass",
-    description: "Hands-on workshop covering 6-DOF arm assembly, wiring, and basic calibration routines.",
-    status: "upcoming" as WorkshopStatus,
-    event_date: "2026-08-15",
-    location: "Lab A – Delta Campus",
-    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDbI3dMEiqkD4MSv6UKBt-FORF7eU9dMPG45PJeK9z5g0byCEQRcXO26piLLycV8FsV6cupeuLxQNK3bdf6crxvyRC20HotjdqRxc53ABhiTArRioiEqAH4-VQgGz6wzsIXB_g7vzCeCd3684B3N6JKFgR6npNWjZ5qZ9wn0Iuylmkyzty9zh_w_lsdtiB46XUTwB_FC97Lfu5clLGJwDwvL8W8od1IydpsZL1y5z30bsIlJpOtU6lu",
-    is_published: true,
-    gallery_images: [
-      "https://example.com/ws1-gallery1.jpg",
-      "https://example.com/ws1-gallery2.jpg"
-    ],
-    total_registrations: 16,
-    created_at: "2026-07-01T10:00:00Z",
-    updated_at: "2026-07-15T14:30:00Z"
-  },
-  {
-    id: "ws-2",
-    title: "Computer Vision with OpenCV",
-    description: "Learn real-time object detection, image segmentation, and camera calibration techniques.",
-    status: "upcoming" as WorkshopStatus,
-    event_date: "2026-08-22",
-    location: "Lab B – Delta Campus",
-    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuC8axthSmIISmFdKV19EdJN6-P7iGbcVw_-0wnbNr4j1CXSBldlnCutOoTHwJXSuK-1zEXEfbFuRMp6exGcvOp-MCp5cfl_LXwO0Ta0lIeo1xJxNfAE74k4jGAuKfNkm5BTz2rcHB5fBWsPWE1BwYXJM-qs_Tm3WJ85at5SDzi31ohaIbhwZyZH-Cc4gcHEajBMvxJKCq5Wfd55zmsRUX5gBQ-dMNp4v3yhxFQYeXm8rxsSkYyQ-iXy",
-    is_published: true,
-    gallery_images: [
-      "https://example.com/ws2-gallery1.jpg"
-    ],
-    total_registrations: 16,
-    created_at: "2026-07-05T09:00:00Z",
-    updated_at: "2026-07-18T11:20:00Z"
-  },
-  {
-    id: "ws-3",
-    title: "PCB Design & Soldering Bootcamp",
-    description: "Design custom PCBs using KiCad, learn SMD soldering, and build a motor driver from scratch.",
-    status: "upcoming" as WorkshopStatus,
-    event_date: "2026-09-05",
-    location: "Electronics Workshop – Delta Campus",
-    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDH-6l7lvztv05L39jJsy0XDRz5s0TF8lVr1kRLQJZWU_VtVc5ltNgFXR1xsNAEHyBifZr0uJvVgfanHX80rkvMrC5kgRyeJ6eAV2DF5TLnRWwY3Q-HdpicYAWeFWrLDH2WI4rZYFIWrkr9pNUdJQ8TZYh7pny6ocd7AH-SteeLXFLY8Vdqr7nwOsJQBiMNZhAhltJ0-bqAmOrmv9WtdHuxUWcczcwMgCyurpOclsVL-vQzv6AaSqzp",
-    is_published: true,
-    gallery_images: [
-      "https://example.com/ws3-gallery1.jpg",
-      "https://example.com/ws3-gallery2.jpg",
-      "https://example.com/ws3-gallery3.jpg"
-    ],
-    total_registrations: 13,
-    created_at: "2026-07-10T10:00:00Z",
-    updated_at: "2026-08-20T16:45:00Z"
-  },
-  {
-    id: "ws-4",
-    title: "Autonomous Navigation with ROS 2",
-    description: "SLAM, path planning, and obstacle avoidance on real mobile robots using ROS 2 Nav2.",
-    status: "completed" as WorkshopStatus,
-    event_date: "2026-07-20",
-    location: "Robotics Arena – Delta Campus",
-    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDt6ITKcFxqbcJHAY2nhffopdO5wu-0ytTnIog6DLy6YVcHw1iuEXu3S9b4rUeZTtvuiHfZ7-gPyC3rX04tSVbLIU1_88ViCmqs2NvphVrrihLGm0Ve1El4Wtc5v1JEdK0SSjgV9pc2I7S5xea30UMi2SlbICGafJdj6-d5352ONGutxOGTw-j5XNvG2W6LmljDug-c9UwDHWx9RU08p1oBmnfuxbUAKwbz_xLdujSYF_-Rh5J4o11t",
-    is_published: true,
-    gallery_images: [
-      "https://example.com/ws4-gallery1.jpg",
-      "https://example.com/ws4-gallery2.jpg"
-    ],
-    total_registrations: 20,
-    created_at: "2026-06-15T10:00:00Z",
-    updated_at: "2026-07-21T09:30:00Z"
-  },
-  {
-    id: "ws-5",
-    title: "Drone Building & Flight Control",
-    description: "Build a quadcopter from parts, flash firmware, tune PID, and complete your maiden flight.",
-    status: "upcoming" as WorkshopStatus,
-    event_date: "2026-09-20",
-    location: "Outdoor Field – Delta Campus",
-    image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuCt3CP2vXOX1ojAKwE4gt2z2tbfKwPK3ssH-IZHzF4-koM0tPv1AUxG_IVFN_Vso6nnwWW7V4pQPWCrv6yms4SdoG61XBm3O72eXOTkgMVhyo7SD2DKHZ6EhCVzZDJEWoFGHh-ZQQPgrnA4FsRdnIoh8rncbxqQ78VUdXR5rteIRh1CH0oL82yg1uZOi2Uiw_jrtBuOG65ZdEqljVzJh6qwGlRxVYEKaAlEp9IQwRT4zEJzV1lfMrnJ",
-    is_published: true,
-    gallery_images: [
-      "https://example.com/ws5-gallery1.jpg",
-      "https://example.com/ws5-gallery2.jpg"
-    ],
-    total_registrations: 0,
-    created_at: "2026-07-20T09:00:00Z",
-    updated_at: "2026-08-10T11:20:00Z"
-  }
-];
-
-// Mock workshop registrations data
-const mockRegistrations: WorkshopRegistration[] = [
-  {
-    id: "reg1",
-    workshop: "ws-1",
-    workshop_title: "Robot Arm Assembly Masterclass",
-    student: "stu-current-user",
-    student_name: "Current Student",
-    status: "registered",
-    created_at: "2026-07-10T09:30:00Z"
-  },
-  {
-    id: "reg2",
-    workshop: "ws-3",
-    workshop_title: "PCB Design & Soldering Bootcamp",
-    student: "stu-current-user",
-    student_name: "Current Student",
-    status: "registered",
-    created_at: "2026-07-15T14:15:00Z"
-  }
-];
+import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 export default function StudentWorkshopsPage() {
-  const [workshops, setWorkshops] = useState<Workshop[]>(mockWorkshops);
-  const [registrations, setRegistrations] = useState<WorkshopRegistration[]>(mockRegistrations);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [registrations, setRegistrations] = useState<WorkshopRegistration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | WorkshopStatus>("all");
   const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null);
   const [isRegistrationDrawerOpen, setIsRegistrationDrawerOpen] = useState(false);
   const [isMyRegistrationsOpen, setIsMyRegistrationsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"available" | "my-registrations">("available");
+  const [registering, setRegistering] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    Promise.all([
+      api.workshops.list(),
+      api.workshopRegistrations.myRegistrations(),
+    ])
+      .then(([ws, regs]) => {
+        setWorkshops(ws);
+        setRegistrations(regs);
+      })
+      .catch((err) => setError(err.message || "Failed to load workshops"))
+      .finally(() => setLoading(false));
+  }, []);
 
   // Filter workshops based on search and status
   const filteredWorkshops = workshops.filter(workshop => {
@@ -134,40 +46,28 @@ export default function StudentWorkshopsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  // Get user's registrations
-  const myRegistrations = registrations.filter(reg => reg.student === "stu-current-user");
-
   // Check if user is registered for a workshop
   const isRegisteredForWorkshop = (workshopId: string) =>
-    myRegistrations.some(reg => reg.workshop === workshopId && reg.status !== "cancelled");
+    registrations.some(reg => reg.workshop === workshopId && reg.status !== "cancelled");
 
   // Handle workshop registration
-  const handleRegister = (workshopId: string) => {
-    // In a real app, this would call the API:
-    // await workshopRegistrations.register(workshopId);
-    // For demo, we'll just add to mock data
-    const workshop = workshops.find(w => w.id === workshopId);
-    if (workshop) {
-      const newRegistration: WorkshopRegistration = {
-        id: `reg${Date.now()}`,
-        workshop: workshopId,
-        workshop_title: workshop.title,
-        student: "stu-current-user",
-        student_name: "Current Student",
-        status: "registered",
-        created_at: new Date().toISOString()
-      };
-      setRegistrations([...registrations, newRegistration]);
-
-      // Update workshop registration count
-      setWorkshops(workshops.map(w =>
+  const handleRegister = async (workshopId: string) => {
+    setRegistering(true);
+    try {
+      const newReg = await api.workshopRegistrations.register(workshopId);
+      setRegistrations(prev => [...prev, newReg]);
+      setWorkshops(prev => prev.map(w =>
         w.id === workshopId
           ? {...w, total_registrations: w.total_registrations + 1}
           : w
       ));
+      setIsRegistrationDrawerOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Registration failed";
+      alert(msg);
+    } finally {
+      setRegistering(false);
     }
-
-    setIsRegistrationDrawerOpen(false);
   };
 
   return (
@@ -237,7 +137,27 @@ export default function StudentWorkshopsPage() {
         </div>
 
         {/* Content based on active tab */}
-        {activeTab === "available" ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-white border border-border rounded-xl overflow-hidden animate-pulse">
+                <div className="h-48 bg-surface-container" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 bg-surface-container rounded w-3/4" />
+                  <div className="h-4 bg-surface-container rounded w-full" />
+                  <div className="h-4 bg-surface-container rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-20">
+            <span className="material-symbols-outlined text-5xl text-destructive/30 mb-4">error</span>
+            <p className="text-headline-md text-destructive mb-2">Failed to load workshops</p>
+            <p className="text-body-md text-on-surface-variant mb-6">{error}</p>
+            <button onClick={() => window.location.reload()} className="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-bold">Retry</button>
+          </div>
+        ) : activeTab === "available" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWorkshops.map(workshop => (
               <div
@@ -347,16 +267,16 @@ export default function StudentWorkshopsPage() {
         ) : (
           <div className="space-y-6">
             <h3 className="font-headline-md text-headline-md text-on-surface mb-4">
-              My Registrations ({myRegistrations.length})
+              My Registrations ({registrations.length})
             </h3>
-            {myRegistrations.length === 0 ? (
+            {registrations.length === 0 ? (
               <div className="text-center py-8">
                 <span className="material-symbols-outlined text-xl text-secondary mb-4">person_off</span>
                 <p className="text-center text-secondary">You haven't registered for any workshops yet.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {myRegistrations.map(registration => (
+                {registrations.map(registration => (
                   <div
                     key={registration.id}
                     className="bg-white border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
@@ -568,7 +488,11 @@ export default function StudentWorkshopsPage() {
                               <button
                                 className="mt-4 w-full px-6 py-3 bg-primary-container text-white font-body-md-bold rounded-lg hover:bg-primary transition-colors shadow-sm"
                                 onClick={() => {
-                                  handleRegister(selectedWorkshop.id);
+                                  if (user) {
+                                    handleRegister(selectedWorkshop.id);
+                                  } else {
+                                    router.push("/login?redirect=/student/workshops");
+                                  }
                                 }}
                               >
                                 Register Now
@@ -615,7 +539,16 @@ export default function StudentWorkshopsPage() {
               Cancel
             </button>
             {selectedWorkshop && !isRegisteredForWorkshop(selectedWorkshop.id) && selectedWorkshop.status === "upcoming" && (
-              <button className="flex-1 px-6 py-2.5 bg-primary-container text-white rounded-lg font-body-md-bold hover:bg-primary transition-colors shadow-sm">
+              <button
+                className="flex-1 px-6 py-2.5 bg-primary-container text-white rounded-lg font-body-md-bold hover:bg-primary transition-colors shadow-sm cursor-pointer"
+                onClick={() => {
+                  if (user) {
+                    handleRegister(selectedWorkshop.id);
+                  } else {
+                    router.push("/login?redirect=/student/workshops");
+                  }
+                }}
+              >
                 Register Now
               </button>
             )}

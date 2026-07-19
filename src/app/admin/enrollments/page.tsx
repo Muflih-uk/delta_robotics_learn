@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -19,25 +23,57 @@ const statusConfig: Record<EnrollmentStatus, { label: string; variant: "default"
   rejected: { label: "Rejected", variant: "destructive", className: "", icon: Ban },
 };
 
-const enrollments: Enrollment[] = [
-  { id: "ENR-001", student: "Rahul Kumar", course: "ros2-intro", course_title: "Intro to ROS 2", status: "payment_verification", approved_by: null, approved_at: null, created_at: "2026-07-10T10:00:00Z", updated_at: "2026-07-10T10:00:00Z" },
-  { id: "ENR-002", student: "Sneha Patel", course: "ros2-intro", course_title: "Intro to ROS 2", status: "active", approved_by: "admin-1", approved_at: "2026-07-09T14:30:00Z", created_at: "2026-07-08T09:00:00Z", updated_at: "2026-07-09T14:30:00Z" },
-  { id: "ENR-003", student: "Vikram Singh", course: "ros2-intro", course_title: "Intro to ROS 2", status: "pending_payment", approved_by: null, approved_at: null, created_at: "2026-07-08T11:20:00Z", updated_at: "2026-07-08T11:20:00Z" },
-  { id: "ENR-004", student: "Neha Gupta", course: "ros2-intro", course_title: "Intro to ROS 2", status: "rejected", approved_by: "admin-1", approved_at: "2026-07-08T16:00:00Z", created_at: "2026-07-07T08:30:00Z", updated_at: "2026-07-08T16:00:00Z" },
-  { id: "ENR-005", student: "Amit Desai", course: "ros2-intro", course_title: "Intro to ROS 2", status: "active", approved_by: "admin-1", approved_at: "2026-07-07T12:00:00Z", created_at: "2026-07-06T09:15:00Z", updated_at: "2026-07-07T12:00:00Z" },
-  { id: "ENR-006", student: "Priya Sharma", course: "ros2-intro", course_title: "Intro to ROS 2", status: "pending_enrollment", approved_by: "admin-1", approved_at: "2026-07-11T10:00:00Z", created_at: "2026-07-05T14:00:00Z", updated_at: "2026-07-11T10:00:00Z" },
-];
-
-const statusSummary: { status: EnrollmentStatus; count: number; icon: typeof Clock; label: string }[] = [
-  { status: "payment_verification", count: 1, icon: DollarSign, label: "Payment Verification" },
-  { status: "pending_enrollment", count: 1, icon: UserCheck, label: "Pending Enrollment" },
-  { status: "active", count: 2, icon: CheckCircle2, label: "Active this month" },
-  { status: "rejected", count: 1, icon: Ban, label: "Rejected" },
-];
-
 export default function EnrollmentsPage() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await api.enrollments.myEnrollments();
+        setEnrollments(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load enrollments");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const statusSummary = [
+    { status: "payment_verification" as EnrollmentStatus, count: enrollments.filter(e => e.status === "payment_verification").length, icon: DollarSign, label: "Payment Verification" },
+    { status: "pending_enrollment" as EnrollmentStatus, count: enrollments.filter(e => e.status === "pending_enrollment").length, icon: UserCheck, label: "Pending Enrollment" },
+    { status: "active" as EnrollmentStatus, count: enrollments.filter(e => e.status === "active").length, icon: CheckCircle2, label: "Active" },
+    { status: "rejected" as EnrollmentStatus, count: enrollments.filter(e => e.status === "rejected").length, icon: Ban, label: "Rejected" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <div className="h-8 w-48 bg-surface-container-high rounded animate-pulse" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-surface-container-high rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-surface-container-high rounded-lg animate-pulse" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-6 p-6 items-center justify-center">
+        <p className="text-danger">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Enrollment Pipeline</h1>
@@ -62,7 +98,6 @@ export default function EnrollmentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Enrollment ID</TableHead>
               <TableHead>Student</TableHead>
               <TableHead>Course</TableHead>
               <TableHead>Date</TableHead>
@@ -71,47 +106,54 @@ export default function EnrollmentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {enrollments.map((enrollment) => {
-              const config = statusConfig[enrollment.status];
-              const StatusIcon = config.icon;
-              const isResolved = enrollment.status === "active" || enrollment.status === "rejected";
-              return (
-                <TableRow key={enrollment.id}>
-                  <TableCell className="font-medium">{enrollment.id}</TableCell>
-                  <TableCell>{enrollment.student}</TableCell>
-                  <TableCell>{enrollment.course_title}</TableCell>
-                  <TableCell>{new Date(enrollment.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Badge variant={config.variant} className={config.className}>
-                      <StatusIcon className="h-3.5 w-3.5 mr-1 inline" />
-                      {config.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {enrollment.status === "payment_verification" && (
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">Verify Payment</Button>
-                        <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">Reject</Button>
-                      </div>
-                    )}
-                    {enrollment.status === "pending_enrollment" && (
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">Confirm Enroll</Button>
-                        <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">Reject</Button>
-                      </div>
-                    )}
-                    {enrollment.status === "pending_payment" && (
-                      <Button size="sm" variant="outline" className="text-muted-foreground" disabled>Awaiting Payment</Button>
-                    )}
-                    {isResolved && (
-                      <Button size="sm" variant="ghost" disabled>
-                        {enrollment.status === "active" ? "Enrolled" : "Rejected"}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {enrollments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No enrollments found
+                </TableCell>
+              </TableRow>
+            ) : (
+              enrollments.map((enrollment) => {
+                const config = statusConfig[enrollment.status];
+                const StatusIcon = config.icon;
+                const isResolved = enrollment.status === "active" || enrollment.status === "rejected";
+                return (
+                  <TableRow key={enrollment.id}>
+                    <TableCell className="font-medium">{enrollment.student}</TableCell>
+                    <TableCell>{enrollment.course_title}</TableCell>
+                    <TableCell>{new Date(enrollment.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Badge variant={config.variant} className={config.className}>
+                        <StatusIcon className="h-3.5 w-3.5 mr-1 inline" />
+                        {config.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {enrollment.status === "payment_verification" && (
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">Verify Payment</Button>
+                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">Reject</Button>
+                        </div>
+                      )}
+                      {enrollment.status === "pending_enrollment" && (
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">Confirm Enroll</Button>
+                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">Reject</Button>
+                        </div>
+                      )}
+                      {enrollment.status === "pending_payment" && (
+                        <Button size="sm" variant="outline" className="text-muted-foreground" disabled>Awaiting Payment</Button>
+                      )}
+                      {isResolved && (
+                        <Button size="sm" variant="ghost" disabled>
+                          {enrollment.status === "active" ? "Enrolled" : "Rejected"}
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>

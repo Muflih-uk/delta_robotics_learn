@@ -20,7 +20,8 @@ export default function LoginPage() {
 
     try {
       const user = await login(email, password);
-      router.push(`/${user.role}/dashboard`);
+      const redirectTo = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
+      router.push(redirectTo || `/${user.role}/dashboard`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
