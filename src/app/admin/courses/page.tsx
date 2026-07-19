@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import type { Course, CourseLevel, CourseCreateRequest } from "@/types";
-
+import { PageHeader } from "@/components/shared/PageHeader";
+import { FilterBar } from "@/components/shared/FilterBar";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { CourseCard } from "@/components/cards/CourseCard";
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,30 +135,17 @@ export default function CoursesPage() {
     <>
       <div className="flex-1 min-h-screen">
         <div className="p-container-padding max-w-[1440px] mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-headline-lg text-on-background font-bold">Courses</h2>
-              <p className="text-on-surface-variant text-body-md">Manage {courses.length} courses across platforms.</p>
-            </div>
-            <button
-              className="flex items-center gap-2 bg-primary-container text-on-primary-container px-6 py-2.5 rounded-lg font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all"
-              onClick={openCreateDrawer}
-            >
-              <span className="material-symbols-outlined">add</span>
-              Add Course
-            </button>
-          </div>
+          <PageHeader
+            title="Courses"
+            description={`Manage ${courses.length} courses across platforms.`}
+            actionButton={{
+              label: "Add Course",
+              icon: "add",
+              onClick: openCreateDrawer
+            }}
+          />
 
-          <div className="bg-surface border border-outline-variant rounded-xl p-4 mb-8 flex flex-wrap items-center gap-4 shadow-sm">
-            <div className="flex-1 min-w-[240px] relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
-              <input
-                className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm bg-bg-alt focus:ring-1 focus:ring-primary outline-none"
-                placeholder="Filter courses..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+          <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Filter courses...">
             <select
               className="px-4 py-2 border border-outline-variant rounded-lg text-sm bg-bg-alt focus:ring-1 focus:ring-primary outline-none"
               value={levelFilter}
@@ -172,66 +162,20 @@ export default function CoursesPage() {
             >
               <option value="all">Status: All</option>
               <option value="published">Published</option>
-              <option value="draft">Draft</option>
             </select>
-          </div>
+          </FilterBar>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-12">
-                <span className="material-symbols-outlined text-4xl text-secondary mb-4">menu_book</span>
-                <p className="text-secondary">No courses found</p>
-              </div>
+              <EmptyState title="No courses found" description="Try adjusting your filters or create a new course." icon="menu_book" />
             ) : (
               filtered.map((course) => (
-                <div key={course.id} className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                  <div className="relative h-48 overflow-hidden bg-surface-container">
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform group-hover:scale-105"
-                      style={{ backgroundImage: `url(${course.thumbnail_url || "https://placehold.co/600x400/1a1a2e/ffffff?text=No+Image"})` }}
-                    />
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      <span className={`text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${course.level === "school" ? "bg-primary" : "bg-tertiary"}`}>
-                        {course.level}
-                      </span>
-                      <span className={`text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${course.is_published ? "bg-success" : "bg-warning"}`}>
-                        {course.is_published ? "Published" : "Draft"}
-                      </span>
-                    </div>
-                    <button
-                      className="absolute top-3 right-3 w-8 h-8 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors"
-                      onClick={(e) => { e.stopPropagation(); openEditDrawer(course); }}
-                    >
-                      <span className="material-symbols-outlined text-lg">more_vert</span>
-                    </button>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-headline-sm text-on-background line-clamp-1">{course.title}</h3>
-                      <span className="text-primary font-bold text-sm">${course.price}</span>
-                    </div>
-                    <p className="text-xs text-on-surface-variant line-clamp-2 mb-4">{course.description}</p>
-                    <div className="pt-4 border-t border-outline-variant flex justify-between items-center">
-                      <span className="text-[11px] text-on-surface-variant italic">
-                        {new Date(course.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          className="text-primary text-xs font-bold flex items-center gap-1 hover:underline"
-                          onClick={() => openEditDrawer(course)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="text-danger text-xs font-bold flex items-center gap-1 hover:underline"
-                          onClick={() => handleDelete(course.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CourseCard 
+                  key={course.id} 
+                  course={course} 
+                  onEdit={openEditDrawer} 
+                  onDelete={handleDelete} 
+                />
               ))
             )}
           </div>
