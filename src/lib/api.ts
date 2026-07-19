@@ -131,7 +131,7 @@ export const api = {
   },
 
   register(data: RegisterRequest) {
-    return request<ApiResponse<RegisterResponse>>("/accounts/register/", {
+    return request<RegisterResponse>("/accounts/register/", {
       method: "POST",
       body: JSON.stringify(data),
     });

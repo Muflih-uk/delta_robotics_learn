@@ -95,11 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (data: RegisterRequest) => {
     const res = await api.register(data);
-    if (!res.success || !res.data) throw new Error(res.message || "Registration failed");
-    setTokens(res.data.access_token, res.data.refresh_token);
-    setCookie(AUTH_KEYS.ACCESS_TOKEN, res.data.access_token, 3600);
-    setUser(res.data.user);
-    return res.data.user;
+    if (!res.success) throw new Error(res.message || "Registration failed");
+    setTokens(res.access_token, res.refresh_token);
+    setCookie(AUTH_KEYS.ACCESS_TOKEN, res.access_token, 3600);
+    setUser(res.user);
+    return res.user;
   }, []);
 
   const logout = useCallback(async () => {
