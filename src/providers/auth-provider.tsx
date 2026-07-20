@@ -82,31 +82,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await api.login({ email, password });
-    if (!res.success) throw new Error(res.message || "Login failed");
+
+    if (!res.success) {
+      throw new Error(res.message || "Login failed");
+    }
     setTokens(res.access_token, res.refresh_token);
     setCookie(AUTH_KEYS.ACCESS_TOKEN, res.access_token, 3600);
+    setCookie("user_role", res.user.role, 3600);
     setUser(res.user);
-
     return res.user;
   }, []);
 
   const register = useCallback(async (data: RegisterRequest) => {
     const res = await api.register(data);
-    if (!res.success || !res.data) throw new Error(res.message || "Registration failed");
-    setTokens(res.data.access_token, res.data.refresh_token);
-    setCookie(AUTH_KEYS.ACCESS_TOKEN, res.data.access_token, 3600);
-    setUser(res.data.user);
-    return res.data.user;
+    if (!res.success) throw new Error(res.message || "Registration failed");
+    setTokens(res.access_token, res.refresh_token);
+    setCookie(AUTH_KEYS.ACCESS_TOKEN, res.access_token, 3600);
+    setUser(res.user);
+    return res.user;
   }, []);
 
   const logout = useCallback(async () => {
     try {
       await api.logout();
-    } catch {
-      // Swallow — clear tokens regardless
-    }
+    } catch {}
     clearTokens();
     clearCookie(AUTH_KEYS.ACCESS_TOKEN);
+    clearCookie("user_role");
     setUser(null);
   }, []);
 

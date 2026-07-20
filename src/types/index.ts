@@ -45,6 +45,8 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
+  success: string;
+  message: string;
   user: User;
   access_token: string;
   refresh_token: string;

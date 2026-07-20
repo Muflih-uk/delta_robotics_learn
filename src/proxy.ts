@@ -1,31 +1,22 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AUTH_KEYS } from "@/constants/auth";
 
 const publicPaths = ["/login", "/signup", "/forgot-password"];
 
-function decodeJwt(token: string) {
-  try {
-    const base64Url = token.split(".")[1];
-    if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/") return NextResponse.next();
-  if (publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  // Allow home page
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
+
+  // Allow public routes
+  if (
+    publicPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    )
+  ) {
     return NextResponse.next();
   }
 
@@ -34,34 +25,49 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/intern") ||
     pathname.startsWith("/admin");
 
-  if (!isProtected) return NextResponse.next();
+  if (!isProtected) {
+    return NextResponse.next();
+  }
 
-  const token = request.cookies.get(AUTH_KEYS.ACCESS_TOKEN)?.value;
+  const accessToken = request.cookies.get(AUTH_KEYS.ACCESS_TOKEN)?.value;
 
-  if (!token) {
+  if (!accessToken) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const payload = decodeJwt(token);
-  const role = payload?.role;
+  // Read your application's role from the cookie
+  const role = request.cookies.get("user_role")?.value;
 
-  if (role) {
-    if (pathname.startsWith("/admin") && role !== "admin") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
-    }
-    if (pathname.startsWith("/student") && role !== "student") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
-    }
-    if (pathname.startsWith("/intern") && role !== "intern") {
-      return NextResponse.redirect(new URL(`/${role}/dashboard`, request.url));
-    }
+  if (!role) {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith("/student") && role !== "student") {
+    return NextResponse.redirect(
+      new URL(`/${role}/dashboard`, request.url)
+    );
+  }
+
+  if (pathname.startsWith("/intern") && role !== "intern") {
+    return NextResponse.redirect(
+      new URL(`/${role}/dashboard`, request.url)
+    );
+  }
+
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    return NextResponse.redirect(
+      new URL(`/${role}/dashboard`, request.url)
+    );
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|logo-32.png|logo-48.png|api).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|logo-32.png|logo-48.png|api).*)",
+  ],
 };
